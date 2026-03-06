@@ -1,0 +1,21 @@
+{
+  "name": "Moral Foundations Dictionary 2.0",
+  "version": "2019",
+  "citation": "Frimer, J. A., Haidt, J., Graham, J., Dehgani, M., & Boghrati, R. (2019). Moral Foundations Dictionary 2.0.",
+  "license": "CC-BY",
+  "scoring": "binary",
+  "source_url": "https://osf.io/xakyw/",
+  "note": "STUB — populate with full MFD2 word lists from official source.",
+  "categories": {
+    "care.virtue": ["care", "compassion", "empath", "protect", "nurture", "kindness", "help", "cherish", "tender", "warm"],
+    "care.vice": ["harm", "hurt", "cruel", "abuse", "neglect", "damage", "wound", "injure", "exploit", "oppress"],
+    "fairness.virtue": ["fair", "equal", "just", "honest", "rights", "impartial", "unbiased", "proportional", "reciprocal"],
+    "fairness.vice": ["unfair", "cheat", "biased", "discriminate", "unjust", "inequality", "exploit", "manipulate", "deceive"],
+    "loyalty.virtue": ["loyal", "solidarity", "team", "family", "allegiance", "devoted", "committed", "patriot", "unity"],
+    "loyalty.vice": ["betray", "traitor", "disloyal", "treason", "defect", "abandon", "backstab", "desert", "turncoat"],
+    "authority.virtue": ["authority", "respect", "duty", "obey", "order", "leader", "tradition", "hierarchy", "discipline"],
+    "authority.vice": ["disobey", "disrespect", "rebel", "subvert", "chaos", "anarchy", "defiant", "insubordinate"],
+    "purity.virtue": ["pure", "sacred", "holy", "clean", "chaste", "noble", "virtue", "wholesome", "reverent"],
+    "purity.vice": ["disgust", "corrupt", "impure", "contaminate", "defile", "profane", "sinful", "degrade", "perverse"]
+  }
+}

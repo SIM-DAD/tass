@@ -1,0 +1,16 @@
+{
+  "name": "NLTK Stopwords",
+  "version": "3.8",
+  "citation": "Bird, S., Klein, E., & Loper, E. (2009). Natural Language Processing with Python. O'Reilly Media. NLTK Project.",
+  "license": "Apache 2.0",
+  "scoring": "binary",
+  "source_url": "https://www.nltk.org/",
+  "note": "Function word categories derived from NLTK stopwords list and hand-curated subcategories.",
+  "categories": {
+    "function_words": ["the", "a", "an", "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "do", "does", "did", "will", "would", "could", "should", "may", "might", "must", "shall", "can", "need", "dare", "ought", "used"],
+    "pronouns": ["i", "me", "my", "myself", "we", "our", "ours", "ourselves", "you", "your", "yours", "yourself", "yourselves", "he", "him", "his", "himself", "she", "her", "hers", "herself", "it", "its", "itself", "they", "them", "their", "theirs", "themselves", "who", "whom", "whose", "which", "that"],
+    "prepositions": ["in", "on", "at", "by", "for", "with", "about", "against", "between", "into", "through", "during", "before", "after", "above", "below", "from", "up", "down", "out", "off", "over", "under", "again", "further", "then", "once", "of", "to"],
+    "conjunctions": ["and", "but", "or", "nor", "so", "yet", "for", "although", "because", "since", "while", "if", "unless", "until", "when", "where", "whereas", "whether", "though", "even", "either", "neither", "both", "not", "only"],
+    "articles": ["the", "a", "an"]
+  }
+}

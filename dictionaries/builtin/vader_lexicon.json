@@ -1,0 +1,45 @@
+{
+  "name": "VADER Lexicon",
+  "version": "2014",
+  "citation": "Hutto, C.J. & Gilbert, E.E. (2014). VADER: A Parsimonious Rule-based Model for Sentiment Analysis of Social Media Text. ICWSM.",
+  "license": "MIT",
+  "scoring": "weighted",
+  "source_url": "https://github.com/cjhutto/vaderSentiment",
+  "note": "STUB — VADER scoring is normally computed by the vaderSentiment library. This file provides the raw lexicon for dictionary-mode matching. For production, integrate vaderSentiment directly.",
+  "categories": {
+    "positive": {
+      "good": 1.9,
+      "great": 3.1,
+      "excellent": 3.2,
+      "amazing": 3.5,
+      "awesome": 3.1,
+      "wonderful": 3.4,
+      "fantastic": 3.3,
+      "love": 3.0,
+      "like": 2.0,
+      "happy": 2.6,
+      "joy": 2.8,
+      "perfect": 3.2,
+      "brilliant": 3.0,
+      "outstanding": 3.2,
+      "superb": 3.3
+    },
+    "negative": {
+      "bad": -2.5,
+      "terrible": -3.4,
+      "awful": -3.2,
+      "horrible": -3.5,
+      "hate": -3.2,
+      "disgusting": -3.0,
+      "ugly": -2.8,
+      "worst": -3.4,
+      "poor": -2.0,
+      "pathetic": -2.9,
+      "stupid": -2.7,
+      "dreadful": -3.3,
+      "appalling": -3.1,
+      "lousy": -2.8,
+      "miserable": -3.1
+    }
+  }
+}

@@ -1,0 +1,62 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.whl
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+
+# PyInstaller
+*.spec.bak
+dist/
+build/
+
+# Installer output
+*.exe
+*.msi
+TASS_Setup_*.exe
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.user
+*.sln.docstates
+.vs/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# NLTK data (downloaded at runtime)
+nltk_data/
+
+# Test coverage
+.coverage
+htmlcov/
+.pytest_cache/
+.ruff_cache/
+
+# Secrets / local config
+.env
+*.local.json
+local_config.py
+
+# License cache (machine-specific encrypted file)
+*.lcache
+
+# Temp files
+*.tmp
+*.bak
+*.swp

@@ -1,0 +1,43 @@
+{
+  "name": "Brysbaert Concreteness Norms",
+  "version": "2014",
+  "citation": "Brysbaert, M., Warriner, A.B., & Kuperman, V. (2014). Concreteness ratings for 40 thousand generally known English word lemmas. Behavior Research Methods, 46(3), 904-911.",
+  "license": "CC-BY",
+  "scoring": "weighted",
+  "source_url": "https://osf.io/ssjnk/",
+  "note": "STUB — populate with full Brysbaert concreteness norms (~40k words, rated 1-5). High scores = concrete, low scores = abstract.",
+  "categories": {
+    "concreteness": {
+      "apple": 5.0,
+      "dog": 4.93,
+      "car": 4.96,
+      "house": 4.89,
+      "chair": 5.0,
+      "table": 4.96,
+      "book": 4.72,
+      "money": 4.36,
+      "freedom": 1.04,
+      "love": 1.86,
+      "justice": 1.48,
+      "democracy": 1.38,
+      "idea": 1.28,
+      "thought": 1.42,
+      "emotion": 1.30,
+      "knowledge": 1.44,
+      "river": 4.90,
+      "mountain": 4.93,
+      "tree": 4.96,
+      "flower": 4.90,
+      "computer": 4.87,
+      "phone": 4.86,
+      "sky": 4.73,
+      "rain": 4.51,
+      "city": 4.40,
+      "country": 3.90,
+      "government": 2.64,
+      "society": 1.83,
+      "culture": 1.96,
+      "language": 2.08
+    }
+  }
+}
