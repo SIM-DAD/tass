@@ -1,16 +1,58 @@
 {
   "name": "NLTK Stopwords",
   "version": "3.8",
-  "citation": "Bird, S., Klein, E., & Loper, E. (2009). Natural Language Processing with Python. O'Reilly Media. NLTK Project.",
+  "citation": "Bird, S., Klein, E., & Loper, E. (2009). Natural Language Processing with Python. O'Reilly Media. NLTK Project. https://www.nltk.org/",
   "license": "Apache 2.0",
   "scoring": "binary",
   "source_url": "https://www.nltk.org/",
-  "note": "Function word categories derived from NLTK stopwords list and hand-curated subcategories.",
   "categories": {
-    "function_words": ["the", "a", "an", "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "do", "does", "did", "will", "would", "could", "should", "may", "might", "must", "shall", "can", "need", "dare", "ought", "used"],
-    "pronouns": ["i", "me", "my", "myself", "we", "our", "ours", "ourselves", "you", "your", "yours", "yourself", "yourselves", "he", "him", "his", "himself", "she", "her", "hers", "herself", "it", "its", "itself", "they", "them", "their", "theirs", "themselves", "who", "whom", "whose", "which", "that"],
-    "prepositions": ["in", "on", "at", "by", "for", "with", "about", "against", "between", "into", "through", "during", "before", "after", "above", "below", "from", "up", "down", "out", "off", "over", "under", "again", "further", "then", "once", "of", "to"],
-    "conjunctions": ["and", "but", "or", "nor", "so", "yet", "for", "although", "because", "since", "while", "if", "unless", "until", "when", "where", "whereas", "whether", "though", "even", "either", "neither", "both", "not", "only"],
-    "articles": ["the", "a", "an"]
+    "function_words": [
+      "i", "me", "my", "myself", "we", "our", "ours", "ourselves", "you",
+      "your", "yours", "yourself", "yourselves", "he", "him", "his", "himself",
+      "she", "her", "hers", "herself", "it", "its", "itself", "they", "them",
+      "their", "theirs", "themselves", "what", "which", "who", "whom", "this",
+      "that", "these", "those", "am", "is", "are", "was", "were", "be", "been",
+      "being", "have", "has", "had", "having", "do", "does", "did", "doing",
+      "a", "an", "the", "and", "but", "if", "or", "because", "as", "until",
+      "while", "of", "at", "by", "for", "with", "about", "against", "between",
+      "into", "through", "during", "before", "after", "above", "below", "to",
+      "from", "up", "down", "in", "out", "on", "off", "over", "under", "again",
+      "further", "then", "once", "here", "there", "when", "where", "why",
+      "how", "all", "both", "each", "few", "more", "most", "other", "some",
+      "such", "no", "nor", "not", "only", "own", "same", "so", "than", "too",
+      "very", "s", "t", "can", "will", "just", "don", "should", "now", "d",
+      "ll", "m", "o", "re", "ve", "y", "ain", "aren", "couldn", "didn",
+      "doesn", "hadn", "hasn", "haven", "isn", "ma", "mightn", "mustn",
+      "needn", "shan", "shouldn", "wasn", "weren", "won", "wouldn"
+    ],
+    "pronouns": [
+      "i", "me", "my", "myself", "we", "our", "ours", "ourselves",
+      "you", "your", "yours", "yourself", "yourselves",
+      "he", "him", "his", "himself",
+      "she", "her", "hers", "herself",
+      "it", "its", "itself",
+      "they", "them", "their", "theirs", "themselves",
+      "who", "whom", "whose", "which", "what", "that"
+    ],
+    "prepositions": [
+      "in", "on", "at", "by", "for", "with", "about", "against", "between",
+      "into", "through", "during", "before", "after", "above", "below", "to",
+      "from", "up", "down", "out", "off", "over", "under", "of", "along",
+      "amid", "among", "around", "behind", "beneath", "beside", "beyond",
+      "despite", "except", "inside", "near", "outside", "past", "since",
+      "throughout", "toward", "towards", "underneath", "until", "upon",
+      "versus", "via", "within", "without"
+    ],
+    "conjunctions": [
+      "and", "but", "or", "nor", "so", "yet", "for", "although", "because",
+      "since", "while", "if", "unless", "until", "when", "where", "whereas",
+      "whether", "though", "even", "either", "neither", "both", "not", "only",
+      "after", "before", "once", "as", "than", "that", "until", "whenever",
+      "wherever", "however", "meanwhile", "nevertheless", "nonetheless",
+      "otherwise", "therefore", "thus", "hence", "consequently"
+    ],
+    "articles": [
+      "the", "a", "an"
+    ]
   }
 }

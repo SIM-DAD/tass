@@ -53,11 +53,7 @@ class ErrorReporter:
         return True
 
     def _build_report(self, traceback_str: str) -> str:
-        try:
-            from app import TASS_VERSION
-            version = TASS_VERSION
-        except Exception:
-            version = "unknown"
+        version = "1.0.0"
 
         import psutil
         try:

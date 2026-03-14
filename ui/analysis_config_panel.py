@@ -526,6 +526,7 @@ class AnalysisConfigPanel(QWidget):
             text_column=session.column_mapping.text_column,
             dictionaries=dictionaries,
             analysis_config=session.analysis_config,
+            preprocessor_kwargs=preprocessor_kwargs,
         )
 
         self._progress = ProgressDialog("Running Analysis…", parent=self)

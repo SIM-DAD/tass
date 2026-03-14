@@ -170,8 +170,4 @@ def _machine_fingerprint() -> str:
 
 
 def _tass_version() -> str:
-    try:
-        from app import TASS_VERSION
-        return TASS_VERSION
-    except Exception:
-        return "unknown"
+    return "1.0.0"

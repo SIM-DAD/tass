@@ -181,9 +181,8 @@ class WelcomeScreen(QWidget):
         if not path:
             return
         try:
-            from core.project import ProjectSerializer
-            from core.session import Session
-            ProjectSerializer.load(path, Session.instance())
+            from core.project import ProjectManager
+            ProjectManager.load(path)
             # Signal main window to navigate to results
             parent = self.window()
             if hasattr(parent, "navigate_to"):

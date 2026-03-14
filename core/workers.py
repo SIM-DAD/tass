@@ -24,6 +24,7 @@ class AnalysisWorker(QThread):
         text_column: str,
         dictionaries: List[Dict],
         analysis_config,
+        preprocessor_kwargs: Optional[Dict[str, Any]] = None,
         parent=None,
     ):
         super().__init__(parent)
@@ -31,6 +32,7 @@ class AnalysisWorker(QThread):
         self.text_column = text_column
         self.dictionaries = dictionaries
         self.analysis_config = analysis_config
+        self.preprocessor_kwargs = preprocessor_kwargs or {}
         self._cancelled = False
 
     def cancel(self):
@@ -51,11 +53,12 @@ class AnalysisWorker(QThread):
 
         # Step 1: Preprocessing
         self.progress.emit(0, total, "Tokenizing text...")
-        preprocessor = Preprocessor(
-            lowercase=True,
-            strip_punctuation=True,
-            lemmatize=False,
-        )
+        preprocessor_opts = {
+            "lowercase": True,
+            "strip_punctuation": True,
+            **self.preprocessor_kwargs,
+        }
+        preprocessor = Preprocessor(**preprocessor_opts)
         token_lists = preprocessor.process_series(self.raw_df[self.text_column])
 
         if self._cancelled:

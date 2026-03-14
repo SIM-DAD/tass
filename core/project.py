@@ -16,7 +16,7 @@ from typing import Optional
 
 import pandas as pd
 
-from app import TASS_VERSION
+TASS_VERSION = "1.0.0"
 
 
 class ProjectManager:
