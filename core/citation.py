@@ -4,7 +4,7 @@ Produces APA, MLA, and Chicago formatted citations.
 """
 
 from __future__ import annotations
-from app import TASS_VERSION
+TASS_VERSION = "1.0.0"  # Keep in sync with app.py
 
 ZENODO_DOI = "10.5281/zenodo.PENDING"  # Updated at v1.0 release
 AUTHOR_LAST = "TBD"

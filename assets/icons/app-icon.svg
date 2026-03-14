@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+
+<!-- Colors -->
+<!-- Blue: #2563EB -->
+<!-- Dark: #1E2A38 -->
+<!-- Light: #F3F4F6 -->
+
+<!-- Background -->
+<rect width="1024" height="1024" rx="220" fill="#1E2A38"></rect>
+
+<!-- Text block -->
+<g fill="#F3F4F6">
+  <rect x="240" y="300" width="360" height="40" rx="10"></rect>
+  <rect x="240" y="380" width="360" height="40" rx="10"></rect>
+  <rect x="240" y="460" width="280" height="40" rx="10"></rect>
+</g>
+
+<!-- Magnifying glass lens -->
+<circle cx="620" cy="480" r="170" fill="#2563EB"></circle>
+
+<!-- Analysis bars inside lens -->
+<g fill="#F3F4F6">
+  <rect x="560" y="510" width="30" height="70" rx="6"></rect>
+  <rect x="605" y="480" width="30" height="100" rx="6"></rect>
+  <rect x="650" y="450" width="30" height="130" rx="6"></rect>
+</g>
+
+<!-- Magnifying glass outline -->
+<circle cx="620" cy="480" r="170" fill="none" stroke="#F3F4F6" stroke-width="26"></circle>
+
+<!-- Handle -->
+<rect x="730" y="610" width="220" height="60" rx="30" transform="rotate(45 730 610)" fill="#2563EB"></rect>
+
+</svg>
