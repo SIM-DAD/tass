@@ -100,19 +100,22 @@ class LicenseService:
         return self.get_status()
 
     def activate_license(self, license_key: str) -> LicenseStatus:
-        """Validate key with Lemon Squeezy and register machine with Supabase."""
+        """Activate key with Lemon Squeezy (registers this machine) and record in Supabase."""
         try:
+            import platform
             from services.lemon_squeezy_client import LemonSqueezyClient
             ls = LemonSqueezyClient()
-            key_data = ls.validate_key(license_key)
+            instance_name = platform.node() or "TASS-Machine"
+            key_data = ls.activate_machine(license_key, instance_name)
         except Exception as exc:
-            raise RuntimeError(f"License validation failed: {exc}") from exc
+            raise RuntimeError(f"License activation failed: {exc}") from exc
 
-        if not key_data.get("valid"):
+        if not key_data.get("activated"):
             raise RuntimeError(key_data.get("error", "Invalid license key."))
 
         expires_at = key_data.get("expires_at")
         tier = key_data.get("tier", "individual")
+        instance_id = key_data.get("instance_id")
 
         try:
             from services.supabase_client import SupabaseClient
@@ -127,6 +130,7 @@ class LicenseService:
         cache = {
             "mode": "licensed",
             "license_key": license_key,
+            "instance_id": instance_id,
             "tier": tier,
             "expires_at": expires_at,
             "machine_id": _machine_fingerprint(),

@@ -7,8 +7,8 @@ from __future__ import annotations
 TASS_VERSION = "1.0.0"  # Keep in sync with app.py
 
 ZENODO_DOI = "10.5281/zenodo.PENDING"  # Updated at v1.0 release
-AUTHOR_LAST = "TBD"
-AUTHOR_FIRST = "TBD"
+AUTHOR_LAST = "Leith"
+AUTHOR_FIRST = "Alex"
 YEAR = "2026"
 SOFTWARE_TITLE = "TASS: Text Analysis for Social Scientists"
 PUBLISHER = "SIM DAD LLC"

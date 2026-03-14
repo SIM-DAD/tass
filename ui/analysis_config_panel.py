@@ -67,9 +67,12 @@ class _DictCard(QFrame):
         layout.setContentsMargins(12, 10, 12, 10)
         layout.setSpacing(12)
 
-        # Checkbox
+        self._is_optional_download = bool(entry.get("optional_download"))
+
+        # Checkbox (disabled and unchecked for optional-download dicts)
         self._checkbox = QCheckBox()
-        self._checkbox.setChecked(entry.get("enabled_by_default", False))
+        self._checkbox.setChecked(entry.get("enabled_by_default", False) and not self._is_optional_download)
+        self._checkbox.setEnabled(not self._is_optional_download)
         self._checkbox.setFixedWidth(20)
         layout.addWidget(self._checkbox, alignment=Qt.AlignTop)
 
@@ -85,7 +88,7 @@ class _DictCard(QFrame):
         name_font = QFont("Segoe UI", 10)
         name_font.setBold(True)
         name_lbl.setFont(name_font)
-        name_lbl.setStyleSheet("color: #111827;")
+        name_lbl.setStyleSheet("color: #111827;" if not self._is_optional_download else "color: #6B7280;")
         name_row.addWidget(name_lbl)
 
         name_row.addWidget(_license_badge(entry.get("license", "unknown")))
@@ -98,24 +101,37 @@ class _DictCard(QFrame):
         name_row.addStretch()
         text_col.addLayout(name_row)
 
-        # Description
-        desc_lbl = QLabel(entry.get("description", ""))
-        desc_lbl.setWordWrap(True)
-        desc_lbl.setStyleSheet("color: #6B7280; font-size: 9pt;")
-        text_col.addWidget(desc_lbl)
+        # Description or download notice
+        if self._is_optional_download:
+            notice_lbl = QLabel(
+                entry.get("download_notice",
+                          "This dictionary must be downloaded and imported separately.")
+            )
+            notice_lbl.setWordWrap(True)
+            notice_lbl.setStyleSheet(
+                "color: #7E22CE; font-size: 9pt; font-style: italic; "
+                "background: #F3E8FF; border-radius: 4px; padding: 4px 6px;"
+            )
+            text_col.addWidget(notice_lbl)
+        else:
+            desc_lbl = QLabel(entry.get("description", ""))
+            desc_lbl.setWordWrap(True)
+            desc_lbl.setStyleSheet("color: #6B7280; font-size: 9pt;")
+            text_col.addWidget(desc_lbl)
 
-        # Category preview tags
-        cats = entry.get("categories_preview", [])
-        if cats:
-            cats_lbl = QLabel("Categories: " + " · ".join(cats[:6]))
-            cats_lbl.setStyleSheet("color: #2563EB; font-size: 8pt;")
-            cats_lbl.setWordWrap(True)
-            text_col.addWidget(cats_lbl)
+            # Category preview tags
+            cats = entry.get("categories_preview", [])
+            if cats:
+                cats_lbl = QLabel("Categories: " + " · ".join(cats[:6]))
+                cats_lbl.setStyleSheet("color: #2563EB; font-size: 8pt;")
+                cats_lbl.setWordWrap(True)
+                text_col.addWidget(cats_lbl)
 
         layout.addLayout(text_col, 1)
 
-        # Make clicking the card toggle the checkbox
-        self.mousePressEvent = lambda e: self._checkbox.setChecked(not self._checkbox.isChecked())
+        # Clicking the card toggles the checkbox (only for non-optional-download dicts)
+        if not self._is_optional_download:
+            self.mousePressEvent = lambda e: self._checkbox.setChecked(not self._checkbox.isChecked())
 
     @property
     def dict_id(self) -> str:

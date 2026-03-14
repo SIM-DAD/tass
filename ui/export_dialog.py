@@ -223,15 +223,19 @@ class ExportDialog(QDialog):
             if formats["png"] or formats["svg"]:
                 try:
                     from core.visualization_engine import VisualizationEngine
+                    import matplotlib.pyplot as plt
                     viz = VisualizationEngine(
                         palette=session.ui_state.get("color_palette", "default")
                     )
                     bar_fig = viz.bar_chart(summary)
-                    for fmt, flag in [("png", formats["png"]), ("svg", formats["svg"])]:
-                        if flag:
-                            paths = engine.export_figure(bar_fig, f"bar_chart.{fmt}")
-                            exported.extend(paths)
-                    import matplotlib.pyplot as plt
+                    if formats["png"]:
+                        path = os.path.join(out_dir, "bar_chart.png")
+                        viz.save_figure(bar_fig, path)
+                        exported.append(path)
+                    if formats["svg"]:
+                        path = os.path.join(out_dir, "bar_chart.svg")
+                        viz.save_figure(bar_fig, path)
+                        exported.append(path)
                     plt.close(bar_fig)
                 except Exception as e:
                     errors.append(f"Charts: {e}")

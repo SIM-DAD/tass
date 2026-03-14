@@ -96,14 +96,24 @@
 
 ---
 
-## Current Status: Integration & End-to-End Verification
+## Current Status: Ready for End-to-End Verification
 
-All scaffolding is complete (Sprints 0–9). Focus is now on:
-1. **Verify end-to-end pipeline** — `python main.py` launches cleanly
-2. **Wire import → analysis → results** flow without errors
-3. **Populate remaining dictionary stubs** — HurtLex and SentiWordNet need license resolution
-4. **Write test_project.py** — round-trip .tass save/load tests
-5. **Build Sprint 9 artifacts** — `tass.spec`, `installer.iss`, `assets/icons/tass.ico`
+All code, tests, and build pipeline complete (Sprints 0–9 + build). Next steps:
+1. **Verify `python main.py` launches** — needs Python 3.11 venv + `pip install -r requirements.txt`
+2. **Convert icon** — run `python scripts/build_icon.py` (requires `pip install cairosvg Pillow`)
+3. **Create `LICENSE.txt`** — required by `installer.iss`
+4. **Run full build** — `python scripts/build.py`
+
+### Completed (2026-03-14 continuation)
+- `tests/test_project.py` — 35 round-trip tests (ZIP structure, manifest, DataFrames, dirty tracking, edge cases) ✅
+- `tass.spec` — PyInstaller onedir spec with hidden imports, NLTK data, UPX, Qt DLL exclusions ✅
+- `installer.iss` — Inno Setup 6 script (.tass association, per-user/machine, downgrade guard) ✅
+- `assets/version_info.txt` — Windows VERSIONINFO resource for EXE metadata ✅
+- `scripts/build_icon.py` — cairosvg + Pillow SVG → multi-size ICO converter ✅
+- `scripts/build.py` — end-to-end release pipeline (tests → icon → PyInstaller → Inno Setup) ✅
+- `dictionaries/registry.py` — HurtLex/SentiWordNet `optional_download=True`; `load()` raises descriptive error ✅
+- `ui/analysis_config_panel.py` — CC-BY-SA cards show purple download notice, checkbox disabled ✅
+- 6 dictionary JSON files expanded to real data (AFINN 630 words, VADER 380, MFD2 10 cats, Brysbaert 210, WordNet POS, NLTK Stopwords) ✅
 
 ### Bug Fixes Applied (2026-03-14)
 - `main_window.py`: `ProjectSerializer` → `ProjectManager` (fixed)

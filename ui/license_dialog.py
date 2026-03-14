@@ -104,7 +104,7 @@ class LicenseDialog(QDialog):
         key_layout.addWidget(purchase_sep)
 
         purchase_lbl = QLabel(
-            "Don't have a license? <a href='https://tass.simdad.com/buy' "
+            "Don't have a license? <a href='https://simdadllc.com/tass' "
             "style='color:#2563EB;'>Purchase TASS →</a>"
         )
         purchase_lbl.setOpenExternalLinks(True)

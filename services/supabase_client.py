@@ -8,8 +8,8 @@ import os
 import requests
 from typing import Dict, Any
 
-SUPABASE_URL = os.environ.get("TASS_SUPABASE_URL", "")        # e.g. https://xyz.supabase.co
-SUPABASE_ANON_KEY = os.environ.get("TASS_SUPABASE_ANON_KEY", "")
+SUPABASE_URL = os.environ.get("TASS_SUPABASE_URL", "https://jpzgrvpcxsyuitkyhikl.supabase.co")
+SUPABASE_ANON_KEY = os.environ.get("TASS_SUPABASE_ANON_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpwemdydnBjeHN5dWl0a3loaWtsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MTc0NDcsImV4cCI6MjA4OTA5MzQ0N30.jVxX5r_rV8fp5QWQz-fSkmb6hHKwvl83dQfhy0ReeeM")
 
 TIMEOUT = 10  # seconds
 

@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
     QListWidget, QListWidgetItem, QFrame, QSizePolicy, QSpacerItem,
 )
 from PySide6.QtCore import Qt, Signal, QSettings
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QFont, QPixmap
 
 
 MAX_RECENT = 8
@@ -47,18 +47,32 @@ class WelcomeScreen(QWidget):
         left_layout.setContentsMargins(40, 60, 40, 40)
         left_layout.setSpacing(0)
 
-        # Logo area
-        logo_lbl = QLabel("TASS")
-        logo_font = QFont("Segoe UI", 36)
-        logo_font.setBold(True)
-        logo_lbl.setFont(logo_font)
-        logo_lbl.setStyleSheet("color: #60A5FA; letter-spacing: 6px;")
-        left_layout.addWidget(logo_lbl)
+        # Logo area — use wordmark PNG if available, fall back to text
+        wordmark_path = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+            "assets", "icons", "workmark.png",
+        )
+        if os.path.exists(wordmark_path):
+            wordmark_lbl = QLabel()
+            px = QPixmap(wordmark_path)
+            # Scale to fit width=300 while keeping aspect ratio
+            px = px.scaledToWidth(300, Qt.SmoothTransformation)
+            wordmark_lbl.setPixmap(px)
+            wordmark_lbl.setAlignment(Qt.AlignLeft)
+            left_layout.addWidget(wordmark_lbl)
+        else:
+            logo_lbl = QLabel("TASS")
+            logo_font = QFont("Segoe UI", 36)
+            logo_font.setBold(True)
+            logo_lbl.setFont(logo_font)
+            logo_lbl.setStyleSheet("color: #60A5FA; letter-spacing: 6px;")
+            left_layout.addWidget(logo_lbl)
 
-        tagline = QLabel("Text Analysis\nfor Social Scientists")
-        tagline.setStyleSheet("color: #94A3B8; font-size: 12pt; line-height: 1.4;")
-        tagline.setWordWrap(True)
-        left_layout.addWidget(tagline)
+            tagline = QLabel("Text Analysis\nfor Social Scientists")
+            tagline.setStyleSheet("color: #94A3B8; font-size: 12pt; line-height: 1.4;")
+            tagline.setWordWrap(True)
+            left_layout.addWidget(tagline)
+
         left_layout.addSpacing(48)
 
         # Action buttons

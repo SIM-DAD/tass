@@ -14,16 +14,19 @@ else:
 
 sys.path.insert(0, BASE_DIR)
 
+# Load .env in development (no-op in PyInstaller bundle where .env won't exist)
+try:
+    from dotenv import load_dotenv
+    load_dotenv(os.path.join(BASE_DIR, ".env"))
+except ImportError:
+    pass  # python-dotenv not installed; rely on system environment variables
+
 from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import Qt
 from app import TASSApp
 
 
 def main():
-    # Enable high-DPI scaling (PySide6 handles this automatically in Qt 6)
-    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
-    QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
-
+    # Qt 6 enables high-DPI scaling automatically; no setAttribute needed.
     app = TASSApp(sys.argv)
     sys.exit(app.exec())
 

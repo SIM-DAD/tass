@@ -64,6 +64,13 @@ BUILTIN_MANIFEST = [
         "citation": "Bassignana et al. (2018)",
         "categories_preview": ["slurs", "profanity", "derogatory"],
         "enabled_by_default": False,
+        "optional_download": True,
+        "download_notice": (
+            "HurtLex is licensed CC-BY-SA 4.0. It is not bundled with TASS for commercial "
+            "distribution. Download the English word list from "
+            "https://github.com/valeriobasile/hurtlex and import it via "
+            "File → Import Dictionary."
+        ),
     },
     {
         "id": "wordnet_pos",
@@ -94,6 +101,13 @@ BUILTIN_MANIFEST = [
         "citation": "Baccianella et al. (2010)",
         "categories_preview": ["positive", "negative", "objective"],
         "enabled_by_default": False,
+        "optional_download": True,
+        "download_notice": (
+            "SentiWordNet 3.0 is licensed CC-BY-SA 4.0. It is not bundled with TASS for "
+            "commercial distribution. Download the data file from "
+            "https://github.com/aesuli/SentiWordNet and import it via "
+            "File → Import Dictionary."
+        ),
     },
 ]
 
@@ -116,13 +130,23 @@ class DictionaryRegistry:
         return None
 
     def load(self, dict_id: str) -> Dict[str, Any]:
-        """Load and cache a dictionary by its ID."""
+        """Load and cache a dictionary by its ID.
+
+        Raises DictionaryLoadError for optional-download dictionaries that have
+        not been supplied by the user, to avoid accidentally using stub data.
+        """
         if dict_id in self._cache:
             return self._cache[dict_id]
 
         entry = self.get_entry(dict_id)
         if entry is None:
             raise DictionaryLoadError(f"Unknown dictionary ID: {dict_id!r}")
+
+        if entry.get("optional_download") and "path" not in entry:
+            notice = entry.get("download_notice", "This dictionary must be downloaded separately.")
+            raise DictionaryLoadError(
+                f"{entry['display_name']} is not bundled with TASS.\n\n{notice}"
+            )
 
         if "path" in entry:
             path = entry["path"]  # user dictionary with explicit path

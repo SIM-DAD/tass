@@ -436,9 +436,20 @@ class MainWindow(QMainWindow):
             self.set_license_status(status.display_label)
 
     def _show_about(self):
+        import os
+        base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        sq_icon_path = os.path.join(base, "assets", "icons", "sq-icon.png")
+
+        icon_html = ""
+        if os.path.exists(sq_icon_path):
+            # Use a file:// URL so QMessageBox can load the image
+            uri = sq_icon_path.replace("\\", "/")
+            icon_html = f'<p><img src="file:///{uri}" width="64" height="64"></p>'
+
         QMessageBox.about(
             self,
             "About TASS",
+            f"{icon_html}"
             "<h3>TASS — Text Analysis for Social Scientists</h3>"
             "<p>Version 1.0.0</p>"
             "<p>© 2026 SIM DAD LLC. All rights reserved.</p>"
@@ -454,7 +465,7 @@ class MainWindow(QMainWindow):
         import os
         base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         # Prefer .ico (PyInstaller bundle); fall back to .svg (dev)
-        for name in ("tass.ico", "app-icon.svg"):
+        for name in ("tass_icon.ico", "sq-icon.png", "app-icon.svg"):
             path = os.path.join(base, "assets", "icons", name)
             if os.path.exists(path):
                 self.setWindowIcon(QIcon(path))

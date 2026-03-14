@@ -11,7 +11,7 @@ import datetime
 from email.message import EmailMessage
 
 
-REPORT_TO = "support@simdadllc.com"  # Update with real support address
+REPORT_TO = "support@simdadllc.com"  # Support address
 SMTP_HOST = "smtp.gmail.com"          # Update with real SMTP config
 SMTP_PORT = 587
 SMTP_USER = ""                        # Set via environment variable TASS_SMTP_USER
