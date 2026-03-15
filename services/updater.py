@@ -7,7 +7,7 @@ from __future__ import annotations
 import threading
 from typing import Optional, Callable
 
-GITHUB_RELEASES_URL = "https://api.github.com/repos/simdadllc/tass/releases/latest"
+GITHUB_RELEASES_URL = "https://api.github.com/repos/SIM-DAD/tass/releases/latest"
 CHECK_TIMEOUT = 5  # seconds
 
 
