@@ -26,6 +26,9 @@ build/
 *.msi
 TASS_Setup_*.exe
 
+# Internal / project management (not for public repo)
+_internal/
+
 # IDE / tooling
 .vscode/
 .idea/
