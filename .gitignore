@@ -26,13 +26,14 @@ build/
 *.msi
 TASS_Setup_*.exe
 
-# IDE
+# IDE / tooling
 .vscode/
 .idea/
 *.suo
 *.user
 *.sln.docstates
 .vs/
+.claude/
 
 # OS
 .DS_Store
