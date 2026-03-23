@@ -60,6 +60,16 @@ local_config.py
 # License cache (machine-specific encrypted file)
 *.lcache
 
+# Video sub-project (Remotion / Node.js)
+video/node_modules/
+video/out/
+video/frames/
+video/.next/
+video/dist/
+*.mp4
+*.mov
+*.webm
+
 # Temp files
 *.tmp
 *.bak
