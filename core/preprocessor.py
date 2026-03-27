@@ -52,7 +52,7 @@ class Preprocessor:
             try:
                 nltk.data.find(path)
                 break
-            except LookupError:
+            except (LookupError, OSError):
                 try:
                     nltk.download(pkg, quiet=True)
                     break

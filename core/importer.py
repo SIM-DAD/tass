@@ -175,7 +175,7 @@ def _infer_dtype(series: pd.Series) -> str:
     if n_unique < 50 and n_total > 0 and (n_unique / n_total) < 0.1:
         return "categorical"
 
-    if avg_len < 30 and n_unique < 200:
+    if avg_len < 15 and n_unique < 200:
         return "categorical"
 
     return "text"

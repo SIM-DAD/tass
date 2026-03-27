@@ -20,15 +20,16 @@ ROOT = Path(SPECPATH)
 nltk_datas = []
 try:
     import nltk
-    NLTK_DATA_PATH = Path(nltk.data.path[0])
-    for corpus in ("stopwords", "wordnet", "averaged_perceptron_tagger", "omw-1.4"):
-        corpus_path = NLTK_DATA_PATH / "corpora" / corpus
-        if corpus_path.exists():
-            nltk_datas.append((str(corpus_path), f"nltk_data/corpora/{corpus}"))
-    tokenizer_path = NLTK_DATA_PATH / "tokenizers"
-    if tokenizer_path.exists():
-        nltk_datas.append((str(tokenizer_path), "nltk_data/tokenizers"))
-    # deduplicate
+    for _nltk_base in nltk.data.path:
+        _nltk_base = Path(_nltk_base)
+        for corpus in ("stopwords", "wordnet", "averaged_perceptron_tagger", "omw-1.4"):
+            corpus_path = _nltk_base / "corpora" / corpus
+            if corpus_path.exists():
+                nltk_datas.append((str(corpus_path), f"nltk_data/corpora/{corpus}"))
+        tokenizer_path = _nltk_base / "tokenizers"
+        if tokenizer_path.exists():
+            nltk_datas.append((str(tokenizer_path), "nltk_data/tokenizers"))
+    # deduplicate (keep first found for each dest path)
     nltk_datas = list({d[1]: d for d in nltk_datas}.values())
     print(f"[tass.spec] Bundling {len(nltk_datas)} NLTK data directories.")
 except ImportError:
@@ -36,6 +37,10 @@ except ImportError:
     print("  Run: pip install nltk && python -c \"import nltk; nltk.download('stopwords')\" etc.")
 
 # ── Application data files ─────────────────────────────────────────────────
+# NOTE: hurtlex.json and sentiwordnet.json are intentionally absent from
+# dictionaries/builtin/. Both are CC-BY-SA 4.0 (Share-Alike), which is
+# incompatible with commercial distribution. They are optional user downloads
+# — see dictionaries/registry.py (optional_download entries) for details.
 app_datas = [
     (str(ROOT / "dictionaries" / "builtin"), "dictionaries/builtin"),
     (str(ROOT / "assets"), "assets"),
@@ -130,7 +135,6 @@ a = Analysis(
         "sphinx",
         "docutils",
         "test",
-        "unittest",
         "pytest",
         "setuptools",
         "pip",

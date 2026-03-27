@@ -27,6 +27,29 @@ PANELS = [
 ]
 
 
+_INACTIVE_STYLE = (
+    "QPushButton {"
+    "  background-color: transparent;"
+    "  border: none;"
+    "  border-radius: 10px;"
+    "}"
+    "QPushButton:hover {"
+    "  background-color: #253447;"
+    "}"
+)
+_ACTIVE_STYLE = (
+    "QPushButton {"
+    "  background-color: #2563EB;"
+    "  border: none;"
+    "  border-radius: 6px;"
+    "}"
+)
+_INACTIVE_ICON_COLOR  = "color: #64748B; background: transparent;"
+_INACTIVE_LABEL_COLOR = "color: #64748B; background: transparent;"
+_ACTIVE_ICON_COLOR    = "color: #FFFFFF; background: transparent;"
+_ACTIVE_LABEL_COLOR   = "color: #FFFFFF; background: transparent;"
+
+
 class SidebarButton(QPushButton):
     """Icon + label nav button for the sidebar."""
 
@@ -35,34 +58,41 @@ class SidebarButton(QPushButton):
         self.setCheckable(True)
         self.setFocusPolicy(Qt.NoFocus)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.setFixedHeight(56)
+        self.setFixedHeight(60)
         self.setObjectName("sidebar_btn")
+        self.setCursor(Qt.PointingHandCursor)
 
-        # Stack icon over label
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(4, 6, 4, 4)
-        layout.setSpacing(2)
+        layout.setContentsMargins(4, 8, 4, 6)
+        layout.setSpacing(3)
 
-        icon_lbl = QLabel(icon_text)
-        icon_lbl.setAlignment(Qt.AlignCenter)
-        icon_lbl.setAttribute(Qt.WA_TransparentForMouseEvents)
+        self._icon_lbl = QLabel(icon_text)
+        self._icon_lbl.setAlignment(Qt.AlignCenter)
+        self._icon_lbl.setAttribute(Qt.WA_TransparentForMouseEvents)
         icon_font = QFont()
         icon_font.setPointSize(14)
-        icon_lbl.setFont(icon_font)
+        self._icon_lbl.setFont(icon_font)
 
-        text_lbl = QLabel(label)
-        text_lbl.setAlignment(Qt.AlignCenter)
-        text_lbl.setAttribute(Qt.WA_TransparentForMouseEvents)
-        text_font = QFont()
-        text_font.setPointSize(7)
-        text_lbl.setFont(text_font)
+        self._text_lbl = QLabel(label)
+        self._text_lbl.setAlignment(Qt.AlignCenter)
+        self._text_lbl.setAttribute(Qt.WA_TransparentForMouseEvents)
+        text_font = QFont("Segoe UI", 8)
+        self._text_lbl.setFont(text_font)
 
-        layout.addWidget(icon_lbl)
-        layout.addWidget(text_lbl)
+        layout.addWidget(self._icon_lbl)
+        layout.addWidget(self._text_lbl)
 
-    def setStyleSheet(self, style: str):
-        # Allow stylesheet from parent to propagate; don't override
-        super().setStyleSheet(style)
+        self.set_active(False)
+
+    def set_active(self, active: bool):
+        self.setChecked(active)
+        super().setStyleSheet(_ACTIVE_STYLE if active else _INACTIVE_STYLE)
+        self._icon_lbl.setStyleSheet(
+            _ACTIVE_ICON_COLOR if active else _INACTIVE_ICON_COLOR
+        )
+        self._text_lbl.setStyleSheet(
+            _ACTIVE_LABEL_COLOR if active else _INACTIVE_LABEL_COLOR
+        )
 
 
 class MainWindow(QMainWindow):
@@ -106,28 +136,36 @@ class MainWindow(QMainWindow):
         # Sidebar
         sidebar = QFrame()
         sidebar.setObjectName("sidebar")
-        sidebar.setFixedWidth(64)
+        sidebar.setFixedWidth(100)
+        sidebar.setStyleSheet("QFrame#sidebar { background-color: #1A2332; border-right: 1px solid #2E3E52; }")
         sidebar_layout = QVBoxLayout(sidebar)
-        sidebar_layout.setContentsMargins(4, 8, 4, 8)
+        sidebar_layout.setContentsMargins(8, 12, 8, 12)
         sidebar_layout.setSpacing(4)
 
-        # App abbreviation at top
-        app_lbl = QLabel("T\nA\nS\nS")
-        app_lbl.setObjectName("app_title_label")
-        app_lbl.setAlignment(Qt.AlignCenter)
-        title_font = QFont("Segoe UI", 9)
-        title_font.setBold(True)
-        title_font.setLetterSpacing(QFont.AbsoluteSpacing, 2)
-        app_lbl.setFont(title_font)
-        app_lbl.setStyleSheet("color: #60A5FA; padding-bottom: 8px;")
-        sidebar_layout.addWidget(app_lbl)
+        # Logo at top of sidebar
+        import os
+        from PySide6.QtSvgWidgets import QSvgWidget
+        _logo_path = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+            "assets", "icons", "logo.svg",
+        )
+        if os.path.exists(_logo_path):
+            logo_w = QSvgWidget(_logo_path)
+            logo_w.setFixedSize(52, 38)  # 150:110 ratio → 52×38
+            logo_w.setStyleSheet("background: transparent;")
+            sidebar_layout.addWidget(logo_w, alignment=Qt.AlignCenter)
+        else:
+            app_lbl = QLabel("TASS")
+            app_lbl.setAlignment(Qt.AlignCenter)
+            app_lbl.setStyleSheet("color: #60A5FA; font-weight: bold; font-size: 10pt;")
+            sidebar_layout.addWidget(app_lbl)
 
         sep = QFrame()
         sep.setFrameShape(QFrame.HLine)
-        sep.setStyleSheet("background-color: #2E3E52; margin: 0 4px;")
+        sep.setStyleSheet("background-color: #2E3E52;")
         sep.setFixedHeight(1)
         sidebar_layout.addWidget(sep)
-        sidebar_layout.addSpacing(4)
+        sidebar_layout.addSpacing(8)
 
         # Nav buttons
         for panel_id, icon, label in PANELS:
@@ -229,6 +267,10 @@ class MainWindow(QMainWindow):
         license_act.triggered.connect(self._open_license)
         help_menu.addAction(license_act)
 
+        eula_act = QAction("&End User License Agreement", self)
+        eula_act.triggered.connect(lambda: __import__("webbrowser").open("https://usetass.app/eula.html"))
+        help_menu.addAction(eula_act)
+
         about_act = QAction("&About TASS", self)
         about_act.triggered.connect(self._show_about)
         help_menu.addAction(about_act)
@@ -256,14 +298,7 @@ class MainWindow(QMainWindow):
 
         # Update sidebar button states
         for pid, btn in self._sidebar_buttons.items():
-            btn.setChecked(pid == panel_id)
-            # Inline style toggling for sidebar button active state
-            if pid == panel_id:
-                btn.setStyleSheet(
-                    "background-color: #2563EB; color: #FFFFFF; border-radius: 6px;"
-                )
-            else:
-                btn.setStyleSheet("")
+            btn.set_active(pid == panel_id)
 
         from core.session import Session
         Session.instance().ui_state["active_panel"] = panel_id

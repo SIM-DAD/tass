@@ -358,7 +358,9 @@ class ComparePanel(QWidget):
         import pandas as pd
         group_series = session.raw_df[group_col].reset_index(drop=True)
         group_series = group_series.iloc[:len(session.results.entry_scores)]
-        self._group_names = sorted(group_series.unique().tolist())
+        self._group_names = sorted(
+            [str(v) for v in group_series.dropna().unique().tolist()]
+        )
 
         if len(self._group_names) < 2:
             QMessageBox.warning(self, "Insufficient Groups",

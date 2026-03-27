@@ -47,19 +47,18 @@ class WelcomeScreen(QWidget):
         left_layout.setContentsMargins(40, 60, 40, 40)
         left_layout.setSpacing(0)
 
-        # Logo area — use wordmark PNG if available, fall back to text
+        # Logo area — use wordmark SVG if available, fall back to text
+        from PySide6.QtSvgWidgets import QSvgWidget
         wordmark_path = os.path.join(
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-            "assets", "icons", "workmark.png",
+            "assets", "icons", "wordmark.svg",
         )
         if os.path.exists(wordmark_path):
-            wordmark_lbl = QLabel()
-            px = QPixmap(wordmark_path)
-            # Scale to fit width=300 while keeping aspect ratio
-            px = px.scaledToWidth(300, Qt.SmoothTransformation)
-            wordmark_lbl.setPixmap(px)
-            wordmark_lbl.setAlignment(Qt.AlignLeft)
-            left_layout.addWidget(wordmark_lbl)
+            # wordmark viewBox 528×165 → at width 300, height ≈ 94
+            wm_w = QSvgWidget(wordmark_path)
+            wm_w.setFixedSize(300, 94)
+            wm_w.setStyleSheet("background: transparent;")
+            left_layout.addWidget(wm_w)
         else:
             logo_lbl = QLabel("TASS")
             logo_font = QFont("Segoe UI", 36)

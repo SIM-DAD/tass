@@ -253,7 +253,13 @@ class VisualizationPanel(QWidget):
         session = Session.instance()
         if session.results.entry_scores is not None:
             cols = list(session.results.entry_scores.columns)
+            prev = self._sidebar.category_combo.currentData()
             self._sidebar.populate_categories(cols)
+            if prev:
+                for i in range(self._sidebar.category_combo.count()):
+                    if self._sidebar.category_combo.itemData(i) == prev:
+                        self._sidebar.category_combo.setCurrentIndex(i)
+                        break
 
     # ------------------------------------------------------------------
     # Render
@@ -287,15 +293,17 @@ class VisualizationPanel(QWidget):
                 title = "Bar Chart — Mean Scores"
 
             elif chart_type == "cloud":
-                # Aggregate word_matches across all entries
                 from collections import defaultdict
+                selected_cat = self._sidebar.selected_category
                 agg: Dict[str, List[str]] = defaultdict(list)
                 if results.word_matches:
                     for entry_matches in results.word_matches.values():
                         for cat, words in entry_matches.items():
-                            agg[cat].extend(words)
-                fig = viz.word_cloud(dict(agg), title="Word Cloud — Matched Words")
-                title = "Word Cloud"
+                            if selected_cat is None or cat == selected_cat:
+                                agg[cat].extend(words)
+                cat_label = selected_cat.split("__")[-1] if selected_cat else "All"
+                fig = viz.word_cloud(dict(agg), title=f"Word Cloud — {cat_label}")
+                title = f"Word Cloud — {cat_label}"
 
             elif chart_type in ("box", "violin"):
                 cat = self._sidebar.selected_category

@@ -86,7 +86,7 @@ def main():
     else:
         print("\n=== Step 4: Inno Setup skipped (not Windows) ===")
 
-    print("\n✓ Build complete.")
+    print("\nBuild complete.")
 
 
 if __name__ == "__main__":

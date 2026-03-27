@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 150.15 110">
+  <!-- Generator: Adobe Illustrator 29.4.0, SVG Export Plug-In . SVG Version: 2.1.0 Build 152)  -->
+  <defs>
+    <style>
+      .st0 {
+        fill: #2e7d5e;
+      }
+
+      .st1 {
+        fill: #f4f4f5;
+      }
+
+      .st2 {
+        fill: #4e7bbd;
+      }
+    </style>
+  </defs>
+  <g>
+    <rect class="st1" x="93.06" y="28.22" width="50" height="15" rx="2.16" ry="2.16"/>
+    <rect class="st1" x="93.06" y="48.58" width="40" height="15" rx="1.93" ry="1.93"/>
+    <rect class="st1" x="93.06" y="68.16" width="30" height="15" rx="1.67" ry="1.67"/>
+    <rect class="st1" x="93.06" y="87.75" width="20" height="15" rx="1.36" ry="1.36"/>
+  </g>
+  <path class="st2" d="M146.67,0H3.64C1.71,0,.15,1.64.15,3.65v6.4c0,2.02,1.56,3.65,3.48,3.65h63.59v92.46c0,2.12,1.64,3.84,3.66,3.84h5.75c2.02,0,3.66-1.72,3.66-3.84V13.7h66.38c1.92,0,3.48-1.64,3.48-3.65V3.65c0-2.02-1.56-3.65-3.48-3.65h0Z"/>
+  <g>
+    <rect class="st0" x="7.1" y="28.22" width="50" height="15" rx="2.16" ry="2.16"/>
+    <rect class="st0" x=".15" width="150" height="20" rx="4.31" ry="4.31"/>
+    <rect class="st0" x="64.65" width="20" height="110" rx="3.69" ry="3.69"/>
+  </g>
+</svg>

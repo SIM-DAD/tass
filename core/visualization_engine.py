@@ -28,6 +28,7 @@ PALETTES = {
 
 class VisualizationEngine:
     def __init__(self, palette: str = "default", fig_width: float = 10.0, fig_height: float = 6.0):
+        self._palette_name = palette
         self.palette = PALETTES.get(palette, PALETTES["default"])
         self.fig_width = fig_width
         self.fig_height = fig_height
@@ -214,12 +215,14 @@ class VisualizationEngine:
             ax.set_axis_off()
             return fig
 
+        _colormaps = {"grayscale": "Greys", "colorblind": "tab10", "default": "viridis"}
+        colormap = _colormaps.get(self._palette_name, "viridis")
         wc = WordCloud(
             width=1200,
             height=600,
             background_color="white",
             max_words=max_words,
-            colormap="viridis",
+            colormap=colormap,
         ).generate_from_frequencies(freq)
 
         fig, ax = self._new_fig(width=12, height=6)

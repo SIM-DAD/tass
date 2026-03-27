@@ -47,7 +47,7 @@ class TestTokenize:
         tokens = p.tokenize("Hello,")
         # NLTK splits punctuation as separate tokens when not stripped
         full = " ".join(tokens)
-        assert "Hello" in full
+        assert "hello" in full
 
     def test_empty_string(self):
         p = Preprocessor()

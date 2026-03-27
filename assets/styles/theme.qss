@@ -16,29 +16,23 @@ QMainWindow {
 #sidebar {
     background-color: #1E2A38;
     border-right: 1px solid #0F1B26;
-    min-width: 56px;
-    max-width: 56px;
+    /* width is controlled by Python setFixedWidth() */
 }
 
 #sidebar QPushButton {
     background-color: transparent;
-    color: #A8B8C8;
     border: none;
     border-radius: 6px;
-    padding: 10px 4px;
-    font-size: 8pt;
-    text-align: center;
+    padding: 6px 4px;
+}
+
+#sidebar QPushButton QLabel {
+    color: #A8B8C8;
+    background: transparent;
 }
 
 #sidebar QPushButton:hover {
     background-color: #2E3E52;
-    color: #FFFFFF;
-}
-
-#sidebar QPushButton:checked,
-#sidebar QPushButton[active="true"] {
-    background-color: #2563EB;
-    color: #FFFFFF;
 }
 
 #app_title_label {
