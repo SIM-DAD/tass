@@ -4,8 +4,9 @@
 # Build with:  pyinstaller tass.spec
 #
 # Prerequisites:
-#   pip install pyinstaller==6.5.0
-#   assets/icons/tass_icon.ico must exist (created in Illustrator)
+#   Python 3.12 + pip install -r requirements.txt
+#   assets/icons/tass_icon.ico must exist
+# macOS: set CODESIGN_IDENTITY env var for code signing
 #
 # Output: dist/TASS/TASS.exe (onedir bundle)
 
@@ -74,12 +75,8 @@ hidden_imports = [
     "openpyxl",
     "openpyxl.styles",
     "openpyxl.utils",
-    # cryptography
-    "cryptography.hazmat.primitives",
-    "cryptography.hazmat.backends",
-    # requests
-    "requests.adapters",
-    "requests.packages",
+    # platformdirs
+    "platformdirs",
     # TASS internal modules
     "core.session",
     "core.importer",
@@ -88,15 +85,16 @@ hidden_imports = [
     "core.statistics_engine",
     "core.visualization_engine",
     "core.export_engine",
+    "core.formatting",
+    "core.analysis_log",
     "core.project",
     "core.citation",
     "core.workers",
     "dictionaries.loader",
     "dictionaries.registry",
     "services.license",
+    "services.settings_manager",
     "services.error_reporter",
-    "services.supabase_client",
-    "services.lemon_squeezy_client",
     "services.updater",
     "ui.main_window",
     "ui.welcome_screen",
@@ -167,8 +165,8 @@ exe = EXE(
     console=False,        # no console window
     disable_windowed_traceback=False,
     target_arch=None,
-    codesign_identity=None,
-    entitlements_file=None,
+    codesign_identity=os.environ.get("CODESIGN_IDENTITY"),   # set in CI or local env
+    entitlements_file=str(ROOT / "assets" / "entitlements.plist") if sys.platform == "darwin" else None,
     icon=str(ROOT / "assets" / "icons" / "tass_icon.ico"),
     version=str(ROOT / "assets" / "version_info.txt"),
 )
@@ -182,12 +180,18 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[
-        # UPX can corrupt some Qt DLLs — exclude them
+        # UPX can corrupt some Qt DLLs — exclude them (Windows)
         "Qt6Core.dll",
         "Qt6Gui.dll",
         "Qt6Widgets.dll",
         "Qt6Svg.dll",
         "Qt6PrintSupport.dll",
+        # macOS dylibs
+        "libQt6Core.dylib",
+        "libQt6Gui.dylib",
+        "libQt6Widgets.dylib",
+        "libQt6Svg.dylib",
+        "libQt6PrintSupport.dylib",
     ],
     name="TASS",
 )

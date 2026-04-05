@@ -25,17 +25,17 @@ HELP_CONTENT: List[Tuple[str, str, str]] = [
     # (section, article_title, body_html)
     ("Getting Started", "Overview",
      """<h2>TASS — Text Analysis for Social Scientists</h2>
-     <p>TASS is a native Windows desktop application for dictionary-based text analysis.
+     <p>TASS is a desktop application for dictionary-based text analysis.
      It is designed for social science researchers, humanities scholars, and data journalists
      who need NLP-powered insights without writing code.</p>
      <h3>Basic Workflow</h3>
      <ol>
        <li><b>Import</b> — Load a CSV, TXT, or XLSX file via File → Import Data</li>
-       <li><b>Analyze</b> — Select dictionaries and click Run Analysis</li>
-       <li><b>Results</b> — Browse entry-level scores, word matches, and summary statistics</li>
-       <li><b>Compare</b> — Define groups and run t-tests / ANOVA</li>
-       <li><b>Visualize</b> — Generate publication-quality charts</li>
-       <li><b>Export</b> — Save CSV, Excel, or chart files</li>
+       <li><b>Analyze</b> — Select dictionaries, choose a scoring mode, and click Run Analysis</li>
+       <li><b>Results</b> — Browse entry-level scores, word matches, correlations, coverage, and KWIC concordance</li>
+       <li><b>Compare</b> — Select dependent variables and a grouping factor, then run t-tests / ANOVA</li>
+       <li><b>Visualize</b> — Generate publication-quality charts (bar, box, violin, heatmap, word cloud, scatter)</li>
+       <li><b>Export</b> — Save CSV, Excel, APA tables, or chart files</li>
      </ol>"""),
 
     ("Getting Started", "System Requirements",
@@ -83,63 +83,173 @@ HELP_CONTENT: List[Tuple[str, str, str]] = [
        <li><b>Document-level</b> — Aggregate statistics across the full dataset</li>
      </ul>
      <h3>Scoring Modes</h3>
+     <p>Select the scoring mode in the <b>Scoring Mode</b> dropdown on the Analyze panel:</p>
      <ul>
-       <li><b>Binary</b> — (matched / total tokens) × 100. Range: 0–100.</li>
-       <li><b>Weighted</b> — Sum of word weights (e.g., AFINN: −5 to +5).</li>
-       <li><b>Count</b> — Raw count of matched words per entry.</li>
+       <li><b>Dictionary default</b> — Uses each dictionary's built-in scoring:
+         <ul>
+           <li><i>Binary (%)</i> — (matched / total tokens) × 100</li>
+           <li><i>Weighted</i> — Sum of numeric word weights (e.g., AFINN: −5 to +5)</li>
+           <li><i>Count</i> — Raw count of matched tokens</li>
+         </ul>
+       </li>
+       <li><b>Count (raw frequency)</b> — Overrides all dictionaries: returns raw match count per category</li>
+       <li><b>TF-IDF</b> — Term Frequency × Inverse Document Frequency. Weights rare matches higher
+       than common ones. TF = count/tokens, IDF = log(N/(1+DF)). Best for identifying
+       distinctive vocabulary across documents.</li>
+     </ul>
+     <h3>N-gram (Multi-Word) Support</h3>
+     <p>Dictionaries can include multi-word entries like <code>"not happy"</code> or
+     <code>"on the other hand"</code>. TASS automatically:</p>
+     <ul>
+       <li>Detects multi-word entries in dictionaries</li>
+       <li>Generates bigrams/trigrams from your text</li>
+       <li>Suppresses constituent unigrams from double-counting — if "not happy" matches,
+       "happy" alone will <i>not</i> also count as a match in other categories</li>
      </ul>"""),
+
+    ("Analysis", "Preprocessing Options",
+     """<h2>Preprocessing Options</h2>
+     <p>Preprocessing options are configured on the <b>Analyze</b> panel before running analysis:</p>
+     <ul>
+       <li><b>Lemmatize tokens</b> — Reduces words to base form (e.g., "running" → "run",
+       "better" → "good"). Slower but can improve match recall for dictionaries
+       that only list base forms. Uses NLTK WordNet lemmatizer.</li>
+       <li><b>Remove stopwords</b> — Strips common function words ("the", "is", "and")
+       before dictionary matching. Only useful for dictionaries that do not
+       include stopwords in their word lists.</li>
+       <li><b>Min token length</b> — Filters out tokens shorter than N characters.
+       Default is 1 (keep all tokens). Setting to 2 or 3 removes single-character
+       tokens that may be punctuation artifacts.</li>
+     </ul>
+     <p>All text is lowercased and punctuation is stripped before tokenization.</p>"""),
 
     ("Analysis", "Bundled Dictionaries",
      """<h2>Bundled Dictionaries (v1.0)</h2>
      <table>
-       <tr><th>Dictionary</th><th>Categories</th><th>License</th></tr>
-       <tr><td>AFINN-165</td><td>Sentiment valence (−5 to +5)</td><td>MIT</td></tr>
-       <tr><td>VADER Lexicon</td><td>Positive, Negative, Neutral</td><td>MIT</td></tr>
-       <tr><td>Moral Foundations 2.0</td><td>Care, Fairness, Loyalty, Authority, Purity</td><td>CC-BY</td></tr>
-       <tr><td>Brysbaert Concreteness</td><td>Concreteness ratings</td><td>CC-BY</td></tr>
-       <tr><td>HurtLex</td><td>Offensive language categories</td><td>CC-BY-SA</td></tr>
-       <tr><td>WordNet POS</td><td>Noun, Verb, Adjective, Adverb</td><td>Princeton</td></tr>
-       <tr><td>NLTK Stopwords</td><td>Function words, Pronouns, Prepositions</td><td>Apache 2.0</td></tr>
-       <tr><td>SentiWordNet 3.0</td><td>Positive, Negative, Objective</td><td>CC-BY-SA</td></tr>
-     </table>"""),
+       <tr><th>Dictionary</th><th>Categories</th><th>Scoring</th><th>License</th></tr>
+       <tr><td>AFINN-165</td><td>Sentiment valence (−5 to +5)</td><td>Weighted</td><td>MIT</td></tr>
+       <tr><td>VADER Lexicon</td><td>Sentiment (−4 to +4)</td><td>Weighted</td><td>MIT</td></tr>
+       <tr><td>Moral Foundations 2.0</td><td>Care, Fairness, Loyalty, Authority, Purity (virtue + vice)</td><td>Binary</td><td>CC-BY</td></tr>
+       <tr><td>Brysbaert Concreteness</td><td>Concreteness ratings (1.0–5.0)</td><td>Weighted</td><td>CC-BY</td></tr>
+       <tr><td>WordNet POS</td><td>Noun, Verb, Adjective</td><td>Binary</td><td>Princeton WN License</td></tr>
+       <tr><td>NLTK Stopwords</td><td>Function words, Pronouns, Prepositions</td><td>Binary</td><td>Apache 2.0</td></tr>
+     </table>
+     <p>You can also import custom dictionaries in JSON format via the
+     <b>+ Import Custom Dictionary…</b> button on the Analyze panel.</p>"""),
 
     ("Group Comparisons", "Running Comparisons",
      """<h2>Group Comparisons</h2>
      <p>Navigate to the <b>Compare</b> panel after running an analysis.</p>
      <ol>
-       <li>Select the <b>group column</b> from the dropdown (a column in your dataset
-       whose values define the groups, e.g., "condition" with values "treatment", "control").</li>
-       <li>Choose whether to use <b>non-parametric</b> tests (Mann-Whitney U) for 2-group
-       comparisons, or parametric (Welch t-test, the default).</li>
-       <li>Toggle <b>Bonferroni correction</b> to control for multiple comparisons
-       across dictionary categories.</li>
+       <li>Select the <b>Between-Subjects Factor</b> — the column whose values define your
+       groups (e.g., "condition" with values "treatment" / "control").</li>
+       <li>Check the <b>Dependent Variable(s)</b> you want to compare. Only checked
+       variables are analyzed — this prevents unwanted tests and improves performance
+       on large datasets.</li>
+       <li>Choose your <b>options</b>:
+         <ul>
+           <li><i>Non-parametric tests</i> — Use Mann-Whitney U / Kruskal-Wallis instead
+           of Welch t-test / ANOVA</li>
+           <li><i>Correction</i> — Bonferroni (default), FDR (Benjamini-Hochberg), or None</li>
+         </ul>
+       </li>
        <li>Click <b>Run Comparison</b>.</li>
+     </ol>
+     <h3>Structured Output</h3>
+     <p>Results are displayed in 5 collapsible sections:</p>
+     <ol>
+       <li><b>Descriptive Statistics</b> — Group means, SDs, sample sizes, 95% confidence intervals</li>
+       <li><b>Assumption Checks</b> — Shapiro-Wilk normality test + Levene's test for equal variances</li>
+       <li><b>Inferential Test Results</b> — Test statistic with degrees of freedom, p-value, effect size + interpretation</li>
+       <li><b>Post-Hoc Comparisons</b> — Pairwise results (Tukey HSD for parametric, Dunn's test for non-parametric)</li>
+       <li><b>Interpretive Notes</b> — Auto-generated APA-style result sentences ready for manuscripts</li>
      </ol>"""),
 
     ("Group Comparisons", "Statistical Tests",
      """<h2>Statistical Tests</h2>
+     <h3>Inferential Tests</h3>
+     <table>
+       <tr><th>Test</th><th>Groups</th><th>Type</th><th>Output</th></tr>
+       <tr><td>Welch t-test</td><td>2</td><td>Parametric</td><td>t(df) = X.XX</td></tr>
+       <tr><td>Mann-Whitney U</td><td>2</td><td>Non-parametric</td><td>U = X.XX</td></tr>
+       <tr><td>One-way ANOVA</td><td>3+</td><td>Parametric</td><td>F(df₁, df₂) = X.XX</td></tr>
+       <tr><td>Kruskal-Wallis</td><td>3+</td><td>Non-parametric</td><td>H(df) = X.XX</td></tr>
+     </table>
+     <h3>Post-Hoc Tests</h3>
      <ul>
-       <li><b>Welch t-test</b> — 2 groups, parametric. Does not assume equal variances.</li>
-       <li><b>Mann-Whitney U</b> — 2 groups, non-parametric. Rank-based.</li>
-       <li><b>One-way ANOVA</b> — 3 or more groups, parametric.</li>
+       <li><b>Tukey HSD</b> — Used after significant ANOVA. Controls family-wise error rate.</li>
+       <li><b>Dunn's test</b> — Used after significant Kruskal-Wallis. Pairwise Mann-Whitney U with Bonferroni correction. The correct nonparametric post-hoc.</li>
+     </ul>
+     <h3>Assumption Checks</h3>
+     <ul>
+       <li><b>Shapiro-Wilk</b> — Tests normality per group. Violation (p &lt; .05) suggests non-parametric tests may be more appropriate.</li>
+       <li><b>Levene's test</b> — Tests homogeneity of variance across groups. Violation suggests unequal variances (Welch t-test already handles this).</li>
      </ul>
      <h3>Effect Sizes</h3>
+     <table>
+       <tr><th>Metric</th><th>Test</th><th>Negligible</th><th>Small</th><th>Medium</th><th>Large</th></tr>
+       <tr><td>Cohen's d</td><td>t-test</td><td>&lt; 0.2</td><td>0.2–0.5</td><td>0.5–0.8</td><td>&gt; 0.8</td></tr>
+       <tr><td>η² (eta-squared)</td><td>ANOVA</td><td>&lt; .01</td><td>.01–.06</td><td>.06–.14</td><td>&gt; .14</td></tr>
+       <tr><td>r (rank-biserial)</td><td>Mann-Whitney</td><td>&lt; 0.1</td><td>0.1–0.3</td><td>0.3–0.5</td><td>&gt; 0.5</td></tr>
+     </table>
+     <h3>Multiple Comparison Corrections</h3>
      <ul>
-       <li><b>Cohen's d</b> — Standardized mean difference (t-test).</li>
-       <li><b>Rank-biserial r</b> — Effect size for Mann-Whitney U.</li>
-       <li><b>Eta-squared (η²)</b> — Proportion of variance explained (ANOVA).</li>
+       <li><b>Bonferroni</b> — Divides alpha by number of tests. Conservative: controls family-wise error rate. May miss real effects when testing many variables.</li>
+       <li><b>FDR (Benjamini-Hochberg)</b> — Controls false discovery rate. More powerful than Bonferroni: allows more detections at the cost of slightly higher false positive rate. Recommended when testing many variables simultaneously.</li>
+       <li><b>None</b> — No correction. Each test uses α = .05 independently. Increases risk of false positives.</li>
      </ul>
-     <h3>Significance Levels</h3>
+     <h3>P-Value Formatting (APA 7th Edition)</h3>
+     <p>All p-values follow APA 7th Ed. conventions: no leading zero (.006, not 0.006),
+     three decimal places, and <code>p &lt; .001</code> only when truly below .001.</p>
      <p>*** p &lt; .001 &nbsp; ** p &lt; .01 &nbsp; * p &lt; .05 &nbsp; n.s. not significant</p>"""),
+
+    ("Results", "Results Tabs",
+     """<h2>Results Panel Tabs</h2>
+     <p>After running an analysis, the Results panel shows multiple tabs:</p>
+     <ul>
+       <li><b>Scores</b> — Entry-level scores table. Sortable by any column. Shows the
+       numerical score for each dictionary category across every row in your data.</li>
+       <li><b>Word Matches</b> — Interactive highlighting: select a category and entry
+       to see exactly which words matched.</li>
+       <li><b>Summary</b> — Document-level aggregate statistics: mean, SD, min, max,
+       median, and count for each category across the entire dataset.</li>
+       <li><b>Correlations</b> — Pairwise correlation matrix between all category scores.
+       Toggle between Pearson (linear) and Spearman (rank-order) using the Method dropdown.
+       Stars indicate significance: * p &lt; .05, ** p &lt; .01, *** p &lt; .001.</li>
+       <li><b>Coverage</b> — Dictionary coverage statistics per category: entries matched,
+       total entries, coverage percentage, total matches, mean matches per entry.</li>
+       <li><b>KWIC</b> — Keyword-In-Context concordance viewer. Shows matched words
+       with left and right context. Filter by category. Export to CSV.</li>
+     </ul>"""),
+
+    ("Results", "Correlations",
+     """<h2>Correlation Matrix</h2>
+     <p>The Correlations tab computes pairwise correlations between all dictionary category scores.</p>
+     <h3>Methods</h3>
+     <ul>
+       <li><b>Pearson r</b> — Measures linear association. Assumes normality and
+       interval-level data. The default for most dictionary score analyses.</li>
+       <li><b>Spearman r<sub>s</sub></b> — Rank-order correlation. Non-parametric alternative.
+       Use when data are ordinal, non-normal, or you suspect non-linear relationships.</li>
+     </ul>
+     <p>Switch methods using the <b>Method</b> dropdown in the Correlations tab header.
+     The matrix re-computes immediately when you change the method.</p>"""),
 
     ("Visualizations", "Chart Types",
      """<h2>Chart Types</h2>
      <ul>
        <li><b>Bar Chart</b> — Mean category scores for the entire dataset (top N categories).</li>
        <li><b>Word Cloud</b> — Frequency visualization of matched words across all entries.</li>
-       <li><b>Box Plot</b> — Distribution of scores per group for a single category.</li>
-       <li><b>Violin Plot</b> — Richer shape of score distribution per group.</li>
+       <li><b>Box Plot</b> — Distribution of scores per group for a single category. Requires a group column.</li>
+       <li><b>Violin Plot</b> — Richer shape of score distribution per group. Combines box plot with kernel density.</li>
        <li><b>Heatmap</b> — Score matrix showing all categories at once (top N).</li>
+       <li><b>Scatter Plot</b> — Two-category scatter with regression line and r/p annotation.</li>
+     </ul>
+     <h3>Color Palettes</h3>
+     <ul>
+       <li><b>Default</b> — ColorBrewer-based palette for general use.</li>
+       <li><b>Colorblind-safe</b> — Viridis palette, distinguishable by all viewers.</li>
+       <li><b>Grayscale</b> — For journals that require black-and-white figures.</li>
      </ul>
      <h3>Export Formats</h3>
      <p>All charts can be exported as <b>PNG (300 DPI)</b> for presentations/publications,
@@ -178,7 +288,7 @@ HELP_CONTENT: List[Tuple[str, str, str]] = [
 
     ("License & Trial", "Trial Mode",
      """<h2>Trial Mode</h2>
-     <p>The TASS trial is free for 14 days and includes the full toolset with one limitation:</p>
+     <p>The TASS trial is free for <b>30 days</b> and includes the full toolset with one limitation:</p>
      <ul>
        <li><b>Row limit:</b> 500 entries per analysis run.</li>
      </ul>
@@ -190,17 +300,35 @@ HELP_CONTENT: List[Tuple[str, str, str]] = [
 
     ("License & Trial", "Activating a License",
      """<h2>Activating a License</h2>
-     <p>After purchasing at the TASS website:</p>
+     <p>After purchasing a subscription at <b>usetass.app</b>:</p>
      <ol>
        <li>Open <b>Help → License / Activate…</b></li>
-       <li>Enter your Lemon Squeezy license key</li>
+       <li>Enter your Gumroad license key (from your purchase receipt email)</li>
        <li>Click <b>Activate</b></li>
      </ol>
      <p>Activation requires an internet connection the first time.
-     After activation, TASS works fully offline until your license expires.</p>
-     <h3>Machine Limits</h3>
-     <p>Individual licenses allow 2 machines simultaneously.
-     Team licenses allow 5 or 10 seats depending on tier.</p>"""),
+     After activation, TASS works offline with periodic re-verification.</p>
+     <h3>Subscription Tiers</h3>
+     <table>
+       <tr><th>Tier</th><th>Price</th><th>Seats</th><th>Audience</th></tr>
+       <tr><td>Academic</td><td>$79/yr</td><td>2</td><td>Students, faculty, staff</td></tr>
+       <tr><td>Professional</td><td>$129/yr</td><td>2</td><td>Journalists, consultants, nonprofits</td></tr>
+       <tr><td>Lab</td><td>$249/yr</td><td>10</td><td>Research labs</td></tr>
+       <tr><td>Department</td><td>$699/yr</td><td>50</td><td>Academic departments</td></tr>
+     </table>"""),
+
+    ("Keyboard Shortcuts", "Shortcuts",
+     """<h2>Keyboard Shortcuts</h2>
+     <table>
+       <tr><th>Shortcut</th><th>Action</th></tr>
+       <tr><td>Ctrl+N</td><td>New Analysis</td></tr>
+       <tr><td>Ctrl+O</td><td>Open Project</td></tr>
+       <tr><td>Ctrl+S</td><td>Save Project</td></tr>
+       <tr><td>Ctrl+I</td><td>Import Data</td></tr>
+       <tr><td>Ctrl+R</td><td>Run Analysis</td></tr>
+       <tr><td>Ctrl+E</td><td>Export Results</td></tr>
+       <tr><td>F1</td><td>Help</td></tr>
+     </table>"""),
 ]
 
 
@@ -266,7 +394,7 @@ class HelpPanel(QWidget):
         self._tree.setStyleSheet(
             "QTreeWidget { border: none; background-color: #F9FAFB; }"
             "QTreeWidget::item { padding: 4px 2px; }"
-            "QTreeWidget::item:selected { background-color: #DBEAFE; color: #1D4ED8; }"
+            "QTreeWidget::item:selected { background-color: #D1FAE5; color: #256B4E; }"
         )
         left_layout.addWidget(self._tree, 1)
 

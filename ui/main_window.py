@@ -11,21 +11,48 @@ from PySide6.QtWidgets import (
     QStatusBar, QMenuBar, QMenu, QFileDialog, QMessageBox,
     QFrame,
 )
-from PySide6.QtCore import Qt, QSettings, QSize
-from PySide6.QtGui import QAction, QFont, QKeySequence, QIcon
+from PySide6.QtCore import Qt, QSize
+from PySide6.QtGui import QAction, QFont, QKeySequence, QIcon, QPixmap, QPainter, QColor
+from PySide6.QtSvgWidgets import QSvgWidget
+from PySide6.QtSvg import QSvgRenderer
+
+import os as _os
+
+# ---------------------------------------------------------------------------
+# Icon helpers
+# ---------------------------------------------------------------------------
+_ICONS_DIR = _os.path.join(
+    _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))),
+    "assets", "icons",
+)
+
+
+def _tinted_icon(svg_path: str, color: str, size: int = 20) -> QIcon:
+    """Render an SVG at *size* px and tint every pixel to *color*."""
+    renderer = QSvgRenderer(svg_path)
+    pm = QPixmap(size, size)
+    pm.fill(Qt.transparent)
+    painter = QPainter(pm)
+    renderer.render(painter)
+    painter.setCompositionMode(QPainter.CompositionMode_SourceIn)
+    painter.fillRect(pm.rect(), QColor(color))
+    painter.end()
+    return QIcon(pm)
 
 
 # Panel identifiers — order matches sidebar buttons
 PANELS = [
-    ("home",       "🏠", "Home"),
-    ("import",     "📂", "Import"),
-    ("analyze",    "🔬", "Analyze"),
-    ("results",    "📊", "Results"),
-    ("visualize",  "🎨", "Visualize"),
-    ("compare",    "⚖️",  "Compare"),
-    ("help",       "❓", "Help"),
+    ("home",      "nav-home.svg",      "Home"),
+    ("import",    "nav-import.svg",    "Import"),
+    ("analyze",   "nav-analyze.svg",   "Analyze"),
+    ("results",   "nav-results.svg",   "Results"),
+    ("visualize", "nav-visualize.svg", "Visualize"),
+    ("compare",   "nav-compare.svg",   "Compare"),
+    ("help",      "nav-help.svg",      "Help"),
 ]
 
+_INACTIVE_CLR = "#64748B"
+_ACTIVE_CLR   = "#FFFFFF"
 
 _INACTIVE_STYLE = (
     "QPushButton {"
@@ -36,42 +63,50 @@ _INACTIVE_STYLE = (
     "QPushButton:hover {"
     "  background-color: #253447;"
     "}"
+    "QPushButton:focus {"
+    "  outline: none;"
+    "  border: 2px solid #60A5FA;"
+    "  border-radius: 8px;"
+    "}"
 )
 _ACTIVE_STYLE = (
     "QPushButton {"
-    "  background-color: #2563EB;"
+    "  background-color: #2E7D5E;"
     "  border: none;"
     "  border-radius: 6px;"
     "}"
+    "QPushButton:focus {"
+    "  outline: none;"
+    "  border: 2px solid #93C5FD;"
+    "  border-radius: 8px;"
+    "}"
 )
-_INACTIVE_ICON_COLOR  = "color: #64748B; background: transparent;"
 _INACTIVE_LABEL_COLOR = "color: #64748B; background: transparent;"
-_ACTIVE_ICON_COLOR    = "color: #FFFFFF; background: transparent;"
 _ACTIVE_LABEL_COLOR   = "color: #FFFFFF; background: transparent;"
 
 
 class SidebarButton(QPushButton):
-    """Icon + label nav button for the sidebar."""
+    """SVG icon + label nav button for the sidebar."""
 
-    def __init__(self, icon_text: str, label: str, parent=None):
+    def __init__(self, icon_file: str, label: str, parent=None):
         super().__init__(parent)
+        self._icon_file = icon_file
         self.setCheckable(True)
-        self.setFocusPolicy(Qt.NoFocus)
+        self.setFocusPolicy(Qt.StrongFocus)          # keyboard-navigable
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.setFixedHeight(60)
         self.setObjectName("sidebar_btn")
         self.setCursor(Qt.PointingHandCursor)
+        self.setAccessibleName(label)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(4, 8, 4, 6)
         layout.setSpacing(3)
 
-        self._icon_lbl = QLabel(icon_text)
+        self._icon_lbl = QLabel()
         self._icon_lbl.setAlignment(Qt.AlignCenter)
         self._icon_lbl.setAttribute(Qt.WA_TransparentForMouseEvents)
-        icon_font = QFont()
-        icon_font.setPointSize(14)
-        self._icon_lbl.setFont(icon_font)
+        self._icon_lbl.setFixedSize(24, 24)
 
         self._text_lbl = QLabel(label)
         self._text_lbl.setAlignment(Qt.AlignCenter)
@@ -79,17 +114,25 @@ class SidebarButton(QPushButton):
         text_font = QFont("Segoe UI", 8)
         self._text_lbl.setFont(text_font)
 
-        layout.addWidget(self._icon_lbl)
+        layout.addWidget(self._icon_lbl, alignment=Qt.AlignCenter)
         layout.addWidget(self._text_lbl)
 
         self.set_active(False)
 
+    def _set_icon_color(self, color: str):
+        svg_path = _os.path.join(_ICONS_DIR, self._icon_file)
+        if _os.path.exists(svg_path):
+            icon = _tinted_icon(svg_path, color, 20)
+            self._icon_lbl.setPixmap(icon.pixmap(20, 20))
+        else:
+            # Fallback to first letter if SVG missing
+            self._icon_lbl.setText(self._text_lbl.text()[:1])
+            self._icon_lbl.setStyleSheet(f"color: {color}; background: transparent; font-size: 14pt; font-weight: bold;")
+
     def set_active(self, active: bool):
         self.setChecked(active)
         super().setStyleSheet(_ACTIVE_STYLE if active else _INACTIVE_STYLE)
-        self._icon_lbl.setStyleSheet(
-            _ACTIVE_ICON_COLOR if active else _INACTIVE_ICON_COLOR
-        )
+        self._set_icon_color(_ACTIVE_CLR if active else _INACTIVE_CLR)
         self._text_lbl.setStyleSheet(
             _ACTIVE_LABEL_COLOR if active else _INACTIVE_LABEL_COLOR
         )
@@ -109,7 +152,8 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(1024, 700)
         self._set_window_icon()
 
-        self._settings = QSettings("SIM DAD LLC", "TASS")
+        from services.settings_manager import SettingsManager
+        self._settings = SettingsManager.instance()
         self._restore_geometry()
 
         self._panel_widgets: dict[str, Optional[QWidget]] = {p[0]: None for p in PANELS}
@@ -143,13 +187,8 @@ class MainWindow(QMainWindow):
         sidebar_layout.setSpacing(4)
 
         # Logo at top of sidebar
-        import os
-        from PySide6.QtSvgWidgets import QSvgWidget
-        _logo_path = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-            "assets", "icons", "logo.svg",
-        )
-        if os.path.exists(_logo_path):
+        _logo_path = _os.path.join(_ICONS_DIR, "logo.svg")
+        if _os.path.exists(_logo_path):
             logo_w = QSvgWidget(_logo_path)
             logo_w.setFixedSize(52, 38)  # 150:110 ratio → 52×38
             logo_w.setStyleSheet("background: transparent;")
@@ -178,7 +217,7 @@ class MainWindow(QMainWindow):
         sidebar_layout.addStretch()
 
         # Settings button at bottom
-        settings_btn = SidebarButton("⚙️", "Settings")
+        settings_btn = SidebarButton("nav-settings.svg", "Settings")
         settings_btn.setToolTip("Settings")
         settings_btn.clicked.connect(self._open_settings)
         sidebar_layout.addWidget(settings_btn)
@@ -254,6 +293,11 @@ class MainWindow(QMainWindow):
         cite_act.triggered.connect(self._open_cite)
         export_menu.addAction(cite_act)
 
+        export_menu.addSeparator()
+        log_act = QAction("Export Analysis &Log…", self)
+        log_act.triggered.connect(self._export_analysis_log)
+        export_menu.addAction(log_act)
+
         # Help
         help_menu = mb.addMenu("&Help")
         help_act = QAction("&Help", self)
@@ -280,7 +324,7 @@ class MainWindow(QMainWindow):
         self.setStatusBar(sb)
 
         self._license_label = QLabel("Not Activated")
-        self._license_label.setStyleSheet("color: #888888; font-size: 9pt; padding-right: 8px;")
+        self._license_label.setStyleSheet("color: #888888; font-size: 10pt; padding-right: 8px;")
         sb.addPermanentWidget(self._license_label)
 
         self._status_label = QLabel("Ready")
@@ -457,6 +501,25 @@ class MainWindow(QMainWindow):
         dlg = CiteDialog(parent=self)
         dlg.exec()
 
+    def _export_analysis_log(self):
+        from core.analysis_log import AnalysisLog
+        alog = AnalysisLog.instance()
+        if alog.is_empty:
+            QMessageBox.information(self, "No Log",
+                                   "No analysis actions have been recorded yet.\n"
+                                   "Run an analysis or comparison first.")
+            return
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Export Analysis Log", "tass_analysis_log.txt", "Text Files (*.txt)"
+        )
+        if path:
+            try:
+                with open(path, "w", encoding="utf-8") as fh:
+                    fh.write(alog.as_text())
+                QMessageBox.information(self, "Exported", f"Analysis log saved to:\n{path}")
+            except Exception as exc:
+                QMessageBox.critical(self, "Export Error", str(exc))
+
     def _open_settings(self):
         from ui.settings_dialog import SettingsDialog
         dlg = SettingsDialog(parent=self)
@@ -507,9 +570,10 @@ class MainWindow(QMainWindow):
                 break
 
     def _restore_geometry(self):
-        geom = self._settings.value("mainwindow/geometry")
+        geom = self._settings.get_bytes("mainwindow.geometry")
         if geom:
-            self.restoreGeometry(geom)
+            from PySide6.QtCore import QByteArray
+            self.restoreGeometry(QByteArray(geom))
         else:
             self.resize(1280, 800)
 
@@ -525,7 +589,7 @@ class MainWindow(QMainWindow):
             if reply != QMessageBox.Yes:
                 event.ignore()
                 return
-        self._settings.setValue("mainwindow/geometry", self.saveGeometry())
+        self._settings.set_bytes("mainwindow.geometry", bytes(self.saveGeometry()))
         super().closeEvent(event)
 
 

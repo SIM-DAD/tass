@@ -20,7 +20,7 @@ The dominant tool in this space, LIWC, has long served as the default for resear
 | Group statistical comparisons built in | Yes | No |
 | Publication-quality visualizations | Yes | Limited |
 | Custom dictionary import | Yes | Limited |
-| Price | $49/year | $89+/year |
+| Price | From $79/year | $89+/year |
 | Offline, local analysis | Yes | Yes |
 
 ---
@@ -35,23 +35,33 @@ The dominant tool in this space, LIWC, has long served as the default for resear
 
 ### Analysis Engine
 - Dictionary-based scoring across all bundled resources
+- Three scoring modes: **dictionary default** (binary %/weighted/count), **raw count**, **TF-IDF**
+- N-gram dictionary support: bigrams, trigrams, multi-word phrases with constituent suppression
 - Three analysis levels: **word-level** (match highlighting), **entry-level** (per row), **document-level** (aggregate)
 - Multi-threaded processing — uses all available CPU cores
-- Real-time progress display with estimated time remaining
+- Real-time progress display with cancel support
 
 ### Group Comparisons
-- Define groups by column values
-- Descriptive statistics (mean, SD, min, max, median) per group
-- Independent t-test, Mann-Whitney U, one-way ANOVA
-- Effect sizes (Cohen's d, eta-squared)
-- Visualized box plots and violin plots per category
+- SPSS-style variable assignment: select between-subjects factor + dependent variables
+- Welch t-test, Mann-Whitney U, one-way ANOVA, Kruskal-Wallis
+- Post-hoc: Tukey HSD (parametric) or Dunn's test (non-parametric)
+- Assumption checks: Shapiro-Wilk normality + Levene's homogeneity of variance
+- Effect sizes with interpretation labels: Cohen's d, eta-squared, rank-biserial r
+- Degrees of freedom in all output (APA format: t(df), F(df₁, df₂), H(df))
+- P-values formatted per APA 7th Edition (no leading zero, < .001)
+- Multiple comparison correction: Bonferroni, FDR (Benjamini-Hochberg), or none
+- Structured output: 5 collapsible sections (descriptives, assumptions, inferential, post-hoc, interpretive notes)
+- Auto-generated APA result sentences for manuscripts
+- Correlation matrix with Pearson/Spearman toggle
 
 ### Output & Export
-- CSV — full entry-level scores
-- Excel — multi-sheet workbook (raw scores, summary stats, group comparisons)
+- CSV — full entry-level scores with citation block
+- Excel — multi-sheet workbook (raw scores, summary stats, group comparisons, method documentation, citation)
+- APA-formatted comparison table (plain text, paste into manuscripts)
+- Reproducibility metadata sidecar (JSON) alongside every export
 - Static visualizations — high-resolution PNG (300 DPI) and SVG
-  - Bar charts, word clouds, box plots, violin plots, heatmaps
-- Auto-generated APA citation block on every export
+  - Bar charts, word clouds, box plots, violin plots, heatmaps, scatter plots
+- Analysis log export (timestamped decisions for audit trail)
 
 ### Projects
 - Save and restore full session state (`.tass` project files)
@@ -74,14 +84,12 @@ TASS ships with a curated set of commercially-licensed dictionaries and is build
 
 | Dictionary | Coverage | License |
 |---|---|---|
-| AFINN-165 | Sentiment valence | MIT |
+| AFINN-165 | Sentiment valence (−5 to +5) | MIT |
 | VADER Lexicon | Sentiment valence + intensity | MIT |
-| Moral Foundations Dictionary 2.0 | Care, Fairness, Loyalty, Authority, Purity | CC-BY |
-| Brysbaert Concreteness Norms | Concreteness for ~40k words | CC-BY |
-| HurtLex | Hurtful/offensive language by category | CC-BY-SA |
-| WordNet 3.1 | Full English lexicon + POS tags | Princeton (commercial-compatible) |
-| NLTK Stopwords | Function word categories | Apache 2.0 |
-| SentiWordNet 3.0 | Synset-level positive/negative/objective scores | CC-BY-SA |
+| Moral Foundations Dictionary 2.0 | Care, Fairness, Loyalty, Authority, Purity (virtue + vice) | CC-BY |
+| Brysbaert Concreteness Norms | Concreteness ratings (1.0–5.0) | CC-BY |
+| WordNet POS | Noun, Verb, Adjective | Princeton WN License |
+| NLTK Stopwords | Function words, Pronouns, Prepositions | Apache 2.0 |
 
 **Policy:** TASS exclusively bundles dictionaries with verified commercial-use-compatible licenses. All dictionaries are fully attributed and documented in-app.
 
@@ -132,19 +140,19 @@ LLM integration hooks (user-supplied API key), cloud-assisted processing for lar
 
 | Layer | Technology |
 |---|---|
-| Language | Python 3.11 |
-| GUI | PySide6 (Qt 6) |
-| Bundler | PyInstaller |
-| Installer | Inno Setup |
+| Language | Python 3.12 |
+| GUI | PySide6 (Qt 6.8+) |
+| Bundler | PyInstaller 6.10+ |
+| Installer | Inno Setup (Windows), Briefcase (macOS) |
 | Statistics | SciPy + NumPy |
-| Data I/O | pandas + openpyxl |
-| Visualizations | Matplotlib + Seaborn |
-| Word Clouds | wordcloud |
+| Data I/O | pandas + openpyxl + pyarrow |
+| Visualizations | Matplotlib + Seaborn + wordcloud |
 | NLP | NLTK |
-| License Backend | Supabase + Lemon Squeezy |
+| Settings | platformdirs + JSON |
+| License Backend | Gumroad Membership API |
 | Distribution | GitHub Releases |
 
-**System Requirements:** Windows 10/11 (64-bit), 4-core CPU, 8GB RAM minimum; 6-core, 16GB RAM recommended.
+**System Requirements:** Windows 10/11 or macOS 11+ (64-bit), 4-core CPU, 8GB RAM minimum; 6-core, 16GB RAM recommended.
 
 ---
 

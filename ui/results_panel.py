@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
     QTabWidget, QTableView, QListWidget, QListWidgetItem,
     QTextBrowser, QSplitter, QFrame, QHeaderView,
     QAbstractItemView, QSizePolicy, QFileDialog, QMessageBox,
+    QComboBox,
 )
 from PySide6.QtCore import (
     Qt, Signal, QAbstractTableModel, QModelIndex,
@@ -29,7 +30,7 @@ import pandas as pd
 
 # ── Category colour palette (cycles through these) ──────────────────
 _CATEGORY_COLORS = [
-    "#DBEAFE",  # blue
+    "#D1FAE5",  # blue
     "#DCFCE7",  # green
     "#FEF3C7",  # amber
     "#F3E8FF",  # purple
@@ -132,9 +133,9 @@ class _ScoresTab(QWidget):
 
         export_btn = QPushButton("Export CSV…")
         export_btn.setStyleSheet(
-            "QPushButton { background-color: transparent; color: #2563EB; "
+            "QPushButton { background-color: transparent; color: #2E7D5E; "
             "border: 1px solid #93C5FD; border-radius: 4px; padding: 4px 12px; font-size: 9pt; }"
-            "QPushButton:hover { background-color: #EFF6FF; }"
+            "QPushButton:hover { background-color: #ECFDF5; }"
         )
         export_btn.clicked.connect(self._export_csv)
         hdr.addWidget(export_btn)
@@ -391,9 +392,9 @@ class _SummaryTab(QWidget):
 
         export_btn = QPushButton("Export CSV…")
         export_btn.setStyleSheet(
-            "QPushButton { background-color: transparent; color: #2563EB; "
+            "QPushButton { background-color: transparent; color: #2E7D5E; "
             "border: 1px solid #93C5FD; border-radius: 4px; padding: 4px 12px; font-size: 9pt; }"
-            "QPushButton:hover { background-color: #EFF6FF; }"
+            "QPushButton:hover { background-color: #ECFDF5; }"
         )
         export_btn.clicked.connect(self._export_csv)
         hdr.addWidget(export_btn)
@@ -459,7 +460,396 @@ class _SummaryTab(QWidget):
 
 
 # ══════════════════════════════════════════════════════════════════════
-# Tab 3 — Groups (CTA stub for Sprint 5)
+# Tab 3 — Correlation Matrix
+# ══════════════════════════════════════════════════════════════════════
+
+class _CorrelationTab(QWidget):
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(8)
+
+        hdr = QHBoxLayout()
+        self._info_lbl = QLabel("Pairwise correlations between category scores.")
+        self._info_lbl.setStyleSheet("color: #6B7280; font-size: 10pt;")
+        hdr.addWidget(self._info_lbl)
+        hdr.addStretch()
+
+        # Method toggle
+        method_lbl = QLabel("Method:")
+        method_lbl.setStyleSheet("color: #374151; font-size: 10pt;")
+        hdr.addWidget(method_lbl)
+
+        self._method_combo = QComboBox()
+        self._method_combo.addItems(["Pearson", "Spearman"])
+        self._method_combo.setToolTip(
+            "Pearson: linear association (assumes normality).\n"
+            "Spearman: rank-order association (nonparametric)."
+        )
+        self._method_combo.setMinimumWidth(110)
+        self._method_combo.currentIndexChanged.connect(self._on_method_changed)
+        hdr.addWidget(self._method_combo)
+
+        hdr.addSpacing(12)
+
+        export_btn = QPushButton("Export CSV…")
+        export_btn.setStyleSheet(
+            "QPushButton { background-color: transparent; color: #2E7D5E; "
+            "border: 1px solid #93C5FD; border-radius: 4px; padding: 4px 12px; font-size: 10pt; }"
+            "QPushButton:hover { background-color: #ECFDF5; }"
+        )
+        export_btn.clicked.connect(self._export_csv)
+        hdr.addWidget(export_btn)
+
+        layout.addLayout(hdr)
+
+        self._view_container = QWidget()
+        vc_layout = QVBoxLayout(self._view_container)
+        vc_layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self._view_container, 1)
+
+        self._empty_lbl = QLabel(
+            "Run an analysis to see category correlations here.\n\n"
+            "Shows pairwise correlations between all dictionary category scores."
+        )
+        self._empty_lbl.setAlignment(Qt.AlignCenter)
+        self._empty_lbl.setStyleSheet("color: #AAAAAA; font-size: 10pt;")
+        self._empty_lbl.setWordWrap(True)
+        vc_layout.addWidget(self._empty_lbl)
+
+        self._table: Optional[QTableView] = None
+        self._vc_layout = vc_layout
+        self._df: Optional[pd.DataFrame] = None
+        self._scores_df: Optional[pd.DataFrame] = None  # retained for re-computation
+
+    def _on_method_changed(self):
+        if self._scores_df is not None:
+            self.load(self._scores_df)
+
+    def load(self, scores_df: pd.DataFrame):
+        from core.statistics_engine import StatisticsEngine
+        self._scores_df = scores_df
+
+        method = self._method_combo.currentText().lower()  # "pearson" or "spearman"
+        method_display = self._method_combo.currentText()
+        symbol = "r" if method == "pearson" else "r_s"
+
+        engine = StatisticsEngine()
+        corr = engine.correlation_matrix(scores_df, method=method)
+        pvals = engine.correlation_pvalues(scores_df, method=method)
+
+        self._df = corr
+
+        # Format: show r values rounded, with significance annotation
+        display = corr.copy()
+        for col in display.columns:
+            for idx in display.index:
+                r = corr.loc[idx, col]
+                p = pvals.loc[idx, col]
+                if idx == col:
+                    display.loc[idx, col] = "—"
+                elif pd.notna(r):
+                    star = ""
+                    if pd.notna(p):
+                        if p < 0.001:
+                            star = "***"
+                        elif p < 0.01:
+                            star = "**"
+                        elif p < 0.05:
+                            star = "*"
+                    display.loc[idx, col] = f"{r:.3f}{star}"
+                else:
+                    display.loc[idx, col] = "—"
+
+        # Shorten column/index names
+        short_names = {c: c.split("__")[-1] if "__" in c else c for c in display.columns}
+        display = display.rename(columns=short_names, index=short_names)
+        display = display.reset_index()
+        display = display.rename(columns={display.columns[0]: "Category"})
+
+        self._info_lbl.setText(
+            f"{len(corr)} categories · {method_display} {symbol} · "
+            "* p<.05  ** p<.01  *** p<.001"
+        )
+
+        if self._table is not None:
+            self._vc_layout.removeWidget(self._table)
+            self._table.deleteLater()
+            self._table = None
+        self._empty_lbl.hide()
+
+        model = _SortableTableModel(display)
+        self._table = _make_table_view(model)
+        self._table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
+        self._vc_layout.addWidget(self._table)
+
+    def _export_csv(self):
+        if self._df is None:
+            QMessageBox.information(self, "No Data", "Run an analysis first.")
+            return
+        path, _ = QFileDialog.getSaveFileName(self, "Export Correlation Matrix", "", "CSV Files (*.csv)")
+        if path:
+            try:
+                self._df.to_csv(path)
+                QMessageBox.information(self, "Exported", f"Correlation matrix saved to:\n{path}")
+            except Exception as exc:
+                QMessageBox.critical(self, "Export Error", str(exc))
+
+
+# ══════════════════════════════════════════════════════════════════════
+# Tab 4 — Coverage
+# ══════════════════════════════════════════════════════════════════════
+
+class _CoverageTab(QWidget):
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(8)
+
+        hdr = QHBoxLayout()
+        self._info_lbl = QLabel("Dictionary coverage per category.")
+        self._info_lbl.setStyleSheet("color: #6B7280; font-size: 9pt;")
+        hdr.addWidget(self._info_lbl)
+        hdr.addStretch()
+
+        export_btn = QPushButton("Export CSV…")
+        export_btn.setStyleSheet(
+            "QPushButton { background-color: transparent; color: #2E7D5E; "
+            "border: 1px solid #93C5FD; border-radius: 4px; padding: 4px 12px; font-size: 9pt; }"
+            "QPushButton:hover { background-color: #ECFDF5; }"
+        )
+        export_btn.clicked.connect(self._export_csv)
+        hdr.addWidget(export_btn)
+
+        layout.addLayout(hdr)
+
+        self._view_container = QWidget()
+        vc_layout = QVBoxLayout(self._view_container)
+        vc_layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self._view_container, 1)
+
+        self._empty_lbl = QLabel(
+            "Run an analysis to see dictionary coverage here.\n\n"
+            "Shows what percentage of entries were matched by each category."
+        )
+        self._empty_lbl.setAlignment(Qt.AlignCenter)
+        self._empty_lbl.setStyleSheet("color: #AAAAAA; font-size: 10pt;")
+        self._empty_lbl.setWordWrap(True)
+        vc_layout.addWidget(self._empty_lbl)
+
+        self._table: Optional[QTableView] = None
+        self._vc_layout = vc_layout
+        self._df: Optional[pd.DataFrame] = None
+
+    def load(self, scores_df: pd.DataFrame, word_matches: Dict):
+        from core.statistics_engine import StatisticsEngine
+        engine = StatisticsEngine()
+        coverage = engine.coverage_stats(scores_df, word_matches)
+        self._df = coverage
+
+        # Shorten category names for display
+        display = coverage.copy()
+        display["category"] = display["category"].apply(
+            lambda c: c.split("__")[-1] if "__" in c else c
+        )
+
+        self._info_lbl.setText(
+            f"{len(coverage)} categories · "
+            f"Overall entry coverage: "
+            f"{coverage['entry_coverage_pct'].mean():.1f}% average"
+        )
+
+        if self._table is not None:
+            self._vc_layout.removeWidget(self._table)
+            self._table.deleteLater()
+            self._table = None
+        self._empty_lbl.hide()
+
+        model = _SortableTableModel(display)
+        self._table = _make_table_view(model)
+        self._table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
+        self._vc_layout.addWidget(self._table)
+
+    def _export_csv(self):
+        if self._df is None:
+            QMessageBox.information(self, "No Data", "Run an analysis first.")
+            return
+        path, _ = QFileDialog.getSaveFileName(self, "Export Coverage", "", "CSV Files (*.csv)")
+        if path:
+            try:
+                self._df.to_csv(path, index=False)
+                QMessageBox.information(self, "Exported", f"Coverage saved to:\n{path}")
+            except Exception as exc:
+                QMessageBox.critical(self, "Export Error", str(exc))
+
+
+# ══════════════════════════════════════════════════════════════════════
+# Tab 5 — KWIC (Keyword in Context)
+# ══════════════════════════════════════════════════════════════════════
+
+class _KWICTab(QWidget):
+    """
+    Keyword-in-context viewer. Shows each matched word with surrounding
+    context (left context — KEYWORD — right context), filterable by category.
+    Standard concordance display for text analysis.
+    """
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._kwic_data: Optional[pd.DataFrame] = None
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(8)
+
+        # Header row
+        hdr = QHBoxLayout()
+
+        self._info_lbl = QLabel("Keyword-in-context concordance view.")
+        self._info_lbl.setStyleSheet("color: #6B7280; font-size: 9pt;")
+        hdr.addWidget(self._info_lbl)
+
+        hdr.addStretch()
+
+        cat_lbl = QLabel("Filter category:")
+        cat_lbl.setStyleSheet("font-size: 9pt;")
+        hdr.addWidget(cat_lbl)
+
+        self._cat_combo = QComboBox()
+        self._cat_combo.setMinimumWidth(180)
+        self._cat_combo.currentTextChanged.connect(self._on_filter_changed)
+        hdr.addWidget(self._cat_combo)
+
+        export_btn = QPushButton("Export CSV…")
+        export_btn.setStyleSheet(
+            "QPushButton { background-color: transparent; color: #2E7D5E; "
+            "border: 1px solid #93C5FD; border-radius: 4px; padding: 4px 12px; font-size: 9pt; }"
+            "QPushButton:hover { background-color: #ECFDF5; }"
+        )
+        export_btn.clicked.connect(self._export_csv)
+        hdr.addWidget(export_btn)
+
+        layout.addLayout(hdr)
+
+        # Table
+        self._view_container = QWidget()
+        vc_layout = QVBoxLayout(self._view_container)
+        vc_layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self._view_container, 1)
+
+        self._empty_lbl = QLabel(
+            "Run an analysis to see keyword-in-context concordances here.\n\n"
+            "Each matched word is shown with its surrounding text."
+        )
+        self._empty_lbl.setAlignment(Qt.AlignCenter)
+        self._empty_lbl.setStyleSheet("color: #AAAAAA; font-size: 10pt;")
+        self._empty_lbl.setWordWrap(True)
+        vc_layout.addWidget(self._empty_lbl)
+
+        self._table: Optional[QTableView] = None
+        self._vc_layout = vc_layout
+        self._all_kwic: Optional[pd.DataFrame] = None
+
+    def load(self, word_matches: Dict, texts: list, categories: List[str]):
+        """Build KWIC concordance from word matches and source texts."""
+        import re
+
+        rows = []
+        context_window = 6  # words on each side
+
+        for entry_idx, text in enumerate(texts):
+            text_str = str(text)
+            tokens = text_str.split()
+            matches = word_matches.get(entry_idx, {})
+
+            for cat, matched_words in matches.items():
+                for word in matched_words:
+                    # Find positions of this word in the token list
+                    word_lower = word.lower()
+                    for pos, token in enumerate(tokens):
+                        clean = re.sub(r"[^\w]", "", token).lower()
+                        if clean == word_lower:
+                            left = " ".join(tokens[max(0, pos - context_window):pos])
+                            right = " ".join(tokens[pos + 1:pos + 1 + context_window])
+                            cat_short = cat.split("__")[-1] if "__" in cat else cat
+                            rows.append({
+                                "entry": entry_idx + 1,
+                                "category": cat_short,
+                                "category_full": cat,
+                                "left_context": left,
+                                "keyword": token,
+                                "right_context": right,
+                            })
+                            break  # one concordance line per word per entry
+
+        if not rows:
+            self._info_lbl.setText("No keyword matches found.")
+            return
+
+        self._all_kwic = pd.DataFrame(rows)
+
+        # Populate category filter
+        self._cat_combo.blockSignals(True)
+        self._cat_combo.clear()
+        self._cat_combo.addItem("All categories")
+        for cat in sorted(self._all_kwic["category"].unique()):
+            self._cat_combo.addItem(cat)
+        self._cat_combo.blockSignals(False)
+
+        self._display(self._all_kwic)
+
+    def _on_filter_changed(self, text: str):
+        if self._all_kwic is None:
+            return
+        if text == "All categories" or not text:
+            self._display(self._all_kwic)
+        else:
+            filtered = self._all_kwic[self._all_kwic["category"] == text]
+            self._display(filtered)
+
+    def _display(self, df: pd.DataFrame):
+        self._kwic_data = df
+        display = df[["entry", "category", "left_context", "keyword", "right_context"]].copy()
+
+        self._info_lbl.setText(
+            f"{len(display):,} concordance lines · "
+            f"{display['category'].nunique()} categories"
+        )
+
+        if self._table is not None:
+            self._vc_layout.removeWidget(self._table)
+            self._table.deleteLater()
+            self._table = None
+        self._empty_lbl.hide()
+
+        model = _SortableTableModel(display)
+        self._table = _make_table_view(model)
+        # Make keyword column narrower, context columns wider
+        self._table.horizontalHeader().resizeSection(0, 60)   # entry
+        self._table.horizontalHeader().resizeSection(1, 120)  # category
+        self._table.horizontalHeader().resizeSection(2, 250)  # left context
+        self._table.horizontalHeader().resizeSection(3, 100)  # keyword
+        self._table.horizontalHeader().resizeSection(4, 250)  # right context
+        self._vc_layout.addWidget(self._table)
+
+    def _export_csv(self):
+        if self._kwic_data is None:
+            QMessageBox.information(self, "No Data", "Run an analysis first.")
+            return
+        path, _ = QFileDialog.getSaveFileName(self, "Export KWIC", "", "CSV Files (*.csv)")
+        if path:
+            try:
+                self._kwic_data.to_csv(path, index=False)
+                QMessageBox.information(self, "Exported", f"KWIC saved to:\n{path}")
+            except Exception as exc:
+                QMessageBox.critical(self, "Export Error", str(exc))
+
+
+# ══════════════════════════════════════════════════════════════════════
+# Tab 6 — Groups (CTA stub for Sprint 5)
 # ══════════════════════════════════════════════════════════════════════
 
 class _GroupsTab(QWidget):
@@ -571,12 +961,18 @@ class ResultsPanel(QWidget):
         self._scores_tab = _ScoresTab()
         self._matches_tab = _WordMatchesTab()
         self._summary_tab = _SummaryTab()
+        self._correlation_tab = _CorrelationTab()
+        self._coverage_tab = _CoverageTab()
+        self._kwic_tab = _KWICTab()
         self._groups_tab = _GroupsTab()
 
-        self._tabs.addTab(self._scores_tab,   "📊  Scores")
-        self._tabs.addTab(self._matches_tab,  "🔍  Word Matches")
-        self._tabs.addTab(self._summary_tab,  "📋  Summary")
-        self._tabs.addTab(self._groups_tab,   "⚖️  Groups")
+        self._tabs.addTab(self._scores_tab,      "Scores")
+        self._tabs.addTab(self._matches_tab,     "Word Matches")
+        self._tabs.addTab(self._summary_tab,     "Summary")
+        self._tabs.addTab(self._correlation_tab, "Correlations")
+        self._tabs.addTab(self._coverage_tab,    "Coverage")
+        self._tabs.addTab(self._kwic_tab,        "KWIC")
+        self._tabs.addTab(self._groups_tab,      "Groups")
 
     # ------------------------------------------------------------------
     # Public API
@@ -648,6 +1044,15 @@ class ResultsPanel(QWidget):
         # ── Summary tab ──────────────────────────────────────────────
         if summary is not None:
             self._summary_tab.load(summary)
+
+        # ── Correlation tab ──────────────────────────────────────────
+        self._correlation_tab.load(entry_scores)
+
+        # ── Coverage tab ─────────────────────────────────────────────
+        self._coverage_tab.load(entry_scores, word_matches)
+
+        # ── KWIC tab ─────────────────────────────────────────────────
+        self._kwic_tab.load(word_matches, texts, list(entry_scores.columns))
 
         # ── Groups tab ───────────────────────────────────────────────
         self._groups_tab.update_for_session()

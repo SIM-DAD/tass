@@ -24,7 +24,7 @@ import pandas as pd
 
 # ── Dtype badge colors ───────────────────────────────────────────────
 DTYPE_COLORS = {
-    "text":        ("#DBEAFE", "#1D4ED8"),
+    "text":        ("#D1FAE5", "#256B4E"),
     "categorical": ("#DCFCE7", "#15803D"),
     "numeric":     ("#FEF3C7", "#B45309"),
     "datetime":    ("#F3E8FF", "#7E22CE"),
@@ -70,6 +70,7 @@ class _StepHeader(QWidget):
 
     def __init__(self, current: int, total: int, title: str, subtitle: str, parent=None):
         super().__init__(parent)
+        self.setAccessibleName(f"Step {current} of {total}: {title}")
         self.setStyleSheet("background-color: #F9FAFB; border-bottom: 1px solid #E5E7EB;")
         self.setFixedHeight(88)
 
@@ -80,7 +81,7 @@ class _StepHeader(QWidget):
         text_col.setSpacing(2)
 
         step_lbl = QLabel(f"Step {current} of {total}")
-        step_lbl.setStyleSheet("color: #6B7280; font-size: 9pt;")
+        step_lbl.setStyleSheet("color: #6B7280; font-size: 10pt;")
         text_col.addWidget(step_lbl)
 
         title_lbl = QLabel(title)
@@ -91,7 +92,7 @@ class _StepHeader(QWidget):
         text_col.addWidget(title_lbl)
 
         sub_lbl = QLabel(subtitle)
-        sub_lbl.setStyleSheet("color: #6B7280; font-size: 9pt;")
+        sub_lbl.setStyleSheet("color: #6B7280; font-size: 10pt;")
         text_col.addWidget(sub_lbl)
 
         outer.addLayout(text_col)
@@ -102,7 +103,7 @@ class _StepHeader(QWidget):
         for i in range(1, total + 1):
             dot = QLabel("●" if i == current else "○")
             dot.setStyleSheet(
-                f"color: {'#2563EB' if i == current else '#D1D5DB'}; font-size: 14pt;"
+                f"color: {'#2E7D5E' if i == current else '#D1D5DB'}; font-size: 14pt;"
             )
             dot_row.addWidget(dot)
         outer.addLayout(dot_row)
@@ -124,8 +125,8 @@ class _DropZone(QFrame):
         self.setFixedHeight(160)
         self.setStyleSheet(
             "QFrame { border: 2px dashed #93C5FD; border-radius: 12px; "
-            "background-color: #EFF6FF; }"
-            "QFrame:hover { border-color: #2563EB; background-color: #DBEAFE; }"
+            "background-color: #ECFDF5; }"
+            "QFrame:hover { border-color: #2E7D5E; background-color: #D1FAE5; }"
         )
 
         layout = QVBoxLayout(self)
@@ -142,7 +143,7 @@ class _DropZone(QFrame):
         main_lbl = QLabel("Drop files here or click to browse")
         main_lbl.setAlignment(Qt.AlignCenter)
         main_lbl.setStyleSheet(
-            "color: #2563EB; font-size: 11pt; font-weight: bold; border: none;"
+            "color: #2E7D5E; font-size: 11pt; font-weight: bold; border: none;"
         )
         layout.addWidget(main_lbl)
 
@@ -285,9 +286,9 @@ class _Step2ColumnMapping(QWidget):
         # Text column (required)
         text_group = QGroupBox("Text Column  (required)")
         text_group.setStyleSheet(
-            "QGroupBox { border: 1.5px solid #2563EB; border-radius: 8px; "
+            "QGroupBox { border: 1.5px solid #2E7D5E; border-radius: 8px; "
             "margin-top: 10px; padding: 12px; }"
-            "QGroupBox::title { color: #2563EB; font-weight: bold; "
+            "QGroupBox::title { color: #2E7D5E; font-weight: bold; "
             "subcontrol-origin: margin; subcontrol-position: top left; "
             "padding: 0 8px; background-color: #FFFFFF; }"
         )
@@ -449,8 +450,8 @@ class _Step3Preview(QWidget):
 
         self._summary_lbl = QLabel()
         self._summary_lbl.setStyleSheet(
-            "background-color: #EFF6FF; color: #1E40AF; "
-            "border: 1px solid #BFDBFE; border-radius: 6px; padding: 8px 12px; font-size: 9pt;"
+            "background-color: #ECFDF5; color: #1E5C3F; "
+            "border: 1px solid #A7F3D0; border-radius: 6px; padding: 8px 12px; font-size: 9pt;"
         )
         body_layout.addWidget(self._summary_lbl)
 

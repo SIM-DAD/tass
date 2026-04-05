@@ -244,3 +244,165 @@ class TestGroupStatsToDict:
         result = engine.group_comparisons(simple_scores, two_group_series, bonferroni=False)
         for gs in result.values():
             json.dumps(gs.to_dict(), default=str)  # should not raise
+
+    def test_to_dict_includes_levene(self, engine, simple_scores, two_group_series):
+        result = engine.group_comparisons(simple_scores, two_group_series, bonferroni=False)
+        for gs in result.values():
+            d = gs.to_dict()
+            assert "levene" in d
+
+    def test_to_dict_includes_posthoc_method(self, engine, simple_scores, two_group_series):
+        result = engine.group_comparisons(simple_scores, two_group_series, bonferroni=False)
+        for gs in result.values():
+            d = gs.to_dict()
+            assert "posthoc_method" in d
+
+
+# ══════════════════════════════════════════════════════════════════════
+# Levene's test
+# ══════════════════════════════════════════════════════════════════════
+
+class TestLeveneTest:
+
+    def test_levene_present_two_groups(self, engine, simple_scores, two_group_series):
+        result = engine.group_comparisons(simple_scores, two_group_series, bonferroni=False)
+        for gs in result.values():
+            assert gs.levene is not None
+            assert len(gs.levene) == 3  # (F, p, equal_bool)
+
+    def test_levene_present_three_groups(self, engine, simple_scores, three_group_series):
+        result = engine.group_comparisons(simple_scores, three_group_series, bonferroni=False)
+        for gs in result.values():
+            assert gs.levene is not None
+
+    def test_levene_f_stat_is_float(self, engine, simple_scores, two_group_series):
+        result = engine.group_comparisons(simple_scores, two_group_series, bonferroni=False)
+        for gs in result.values():
+            assert isinstance(gs.levene[0], float)
+
+    def test_levene_p_in_range(self, engine, simple_scores, two_group_series):
+        result = engine.group_comparisons(simple_scores, two_group_series, bonferroni=False)
+        for gs in result.values():
+            assert 0 <= gs.levene[1] <= 1
+
+    def test_levene_equal_variance_is_bool(self, engine, simple_scores, two_group_series):
+        result = engine.group_comparisons(simple_scores, two_group_series, bonferroni=False)
+        for gs in result.values():
+            assert gs.levene[2] in (True, False)
+
+
+# ══════════════════════════════════════════════════════════════════════
+# Degrees of freedom
+# ══════════════════════════════════════════════════════════════════════
+
+class TestDegreesOfFreedom:
+
+    def test_welch_df_present(self, engine, simple_scores, two_group_series):
+        result = engine.group_comparisons(simple_scores, two_group_series, bonferroni=False)
+        for gs in result.values():
+            assert gs.df_between is not None
+            assert gs.df_between > 0
+
+    def test_anova_df_present(self, engine, simple_scores, three_group_series):
+        result = engine.group_comparisons(simple_scores, three_group_series, bonferroni=False)
+        for gs in result.values():
+            assert gs.df_between == 2.0   # k - 1 = 3 - 1
+            assert gs.df_within == 3.0    # N - k = 6 - 3
+
+    def test_mann_whitney_no_df(self, engine, simple_scores, two_group_series):
+        result = engine.group_comparisons(simple_scores, two_group_series,
+                                          nonparametric=True, bonferroni=False)
+        for gs in result.values():
+            assert gs.df_between is None
+
+    def test_kruskal_wallis_df(self, engine, simple_scores, three_group_series):
+        result = engine.group_comparisons(simple_scores, three_group_series,
+                                          nonparametric=True, bonferroni=False)
+        for gs in result.values():
+            assert gs.df_between == 2.0   # k - 1
+
+
+# ══════════════════════════════════════════════════════════════════════
+# Dunn's test (nonparametric post-hoc)
+# ══════════════════════════════════════════════════════════════════════
+
+class TestDunnsTest:
+
+    @pytest.fixture
+    def divergent_three_group_data(self):
+        """Three groups with clearly different distributions for significant Kruskal-Wallis."""
+        scores = pd.DataFrame({
+            "score": [1, 2, 1, 2, 1,   10, 11, 10, 11, 10,   20, 21, 20, 21, 20],
+        })
+        groups = pd.Series(["A"]*5 + ["B"]*5 + ["C"]*5)
+        return scores, groups
+
+    def test_dunns_posthoc_method(self, engine, divergent_three_group_data):
+        scores, groups = divergent_three_group_data
+        result = engine.group_comparisons(scores, groups, nonparametric=True, bonferroni=False)
+        gs = result["score"]
+        if gs.posthoc:
+            assert gs.posthoc_method == "Dunn's test"
+
+    def test_tukey_posthoc_method(self, engine, divergent_three_group_data):
+        scores, groups = divergent_three_group_data
+        result = engine.group_comparisons(scores, groups, nonparametric=False, bonferroni=False)
+        gs = result["score"]
+        if gs.posthoc:
+            assert gs.posthoc_method == "Tukey HSD"
+
+    def test_dunns_posthoc_not_used_for_parametric(self, engine, divergent_three_group_data):
+        scores, groups = divergent_three_group_data
+        result = engine.group_comparisons(scores, groups, nonparametric=False, correction="none")
+        gs = result["score"]
+        if gs.posthoc:
+            assert gs.posthoc_method == "Tukey HSD"
+
+    def test_dunns_returns_pairs(self, engine, divergent_three_group_data):
+        scores, groups = divergent_three_group_data
+        result = engine.group_comparisons(scores, groups, nonparametric=True, bonferroni=False)
+        gs = result["score"]
+        if gs.posthoc:
+            # 3 groups → 3 pairwise comparisons
+            assert len(gs.posthoc) == 3
+            for a, b, p, sig in gs.posthoc:
+                assert isinstance(a, str)
+                assert isinstance(b, str)
+                assert 0 <= p <= 1
+                assert isinstance(sig, bool)
+
+
+# ══════════════════════════════════════════════════════════════════════
+# FDR (Benjamini-Hochberg) correction
+# ══════════════════════════════════════════════════════════════════════
+
+class TestFDRCorrection:
+
+    def test_fdr_runs_without_error(self, engine, simple_scores, two_group_series):
+        result = engine.group_comparisons(simple_scores, two_group_series, correction="fdr")
+        assert len(result) == 2
+
+    def test_fdr_significance_flags_present(self, engine, simple_scores, two_group_series):
+        result = engine.group_comparisons(simple_scores, two_group_series, correction="fdr")
+        for gs in result.values():
+            assert gs.significant is not None
+
+    def test_none_correction(self, engine, simple_scores, two_group_series):
+        result = engine.group_comparisons(simple_scores, two_group_series, correction="none")
+        assert len(result) == 2
+
+    def test_fdr_less_conservative_than_bonferroni(self, engine):
+        """FDR should flag at least as many significant results as Bonferroni."""
+        np.random.seed(42)
+        scores = pd.DataFrame({
+            f"cat_{i}": np.random.randn(40) + (0.8 if i < 3 else 0)
+            for i in range(10)
+        })
+        groups = pd.Series(["A"] * 20 + ["B"] * 20)
+
+        bonf = engine.group_comparisons(scores, groups, correction="bonferroni")
+        fdr = engine.group_comparisons(scores, groups, correction="fdr")
+
+        n_sig_bonf = sum(1 for gs in bonf.values() if gs.significant)
+        n_sig_fdr = sum(1 for gs in fdr.values() if gs.significant)
+        assert n_sig_fdr >= n_sig_bonf

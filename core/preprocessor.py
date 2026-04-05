@@ -115,6 +115,21 @@ class Preprocessor:
 
         return tokens
 
+    @staticmethod
+    def generate_ngrams(tokens: List[str], max_n: int) -> List[str]:
+        """Generate n-gram strings from a token list.
+
+        Returns the original unigrams plus bigrams, trigrams, etc. up to max_n.
+        N-grams are joined with spaces: ["not", "happy"] → "not happy".
+        """
+        if max_n <= 1:
+            return tokens
+        ngrams = list(tokens)  # start with unigrams
+        for n in range(2, max_n + 1):
+            for i in range(len(tokens) - n + 1):
+                ngrams.append(" ".join(tokens[i:i + n]))
+        return ngrams
+
     def process_series(self, series: pd.Series) -> List[List[str]]:
         """
         Tokenize every entry in a pandas Series.

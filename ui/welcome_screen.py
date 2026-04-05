@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QListWidget, QListWidgetItem, QFrame, QSizePolicy, QSpacerItem,
 )
-from PySide6.QtCore import Qt, Signal, QSettings
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QFont, QPixmap
 
 
@@ -26,7 +26,8 @@ class WelcomeScreen(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._settings = QSettings("SIM DAD LLC", "TASS")
+        from services.settings_manager import SettingsManager
+        self._settings = SettingsManager.instance()
         self._build_ui()
         self._load_recent_projects()
 
@@ -139,13 +140,13 @@ class WelcomeScreen(QWidget):
         # Tips section
         tips_frame = QFrame()
         tips_frame.setStyleSheet(
-            "background-color: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 8px;"
+            "background-color: #ECFDF5; border: 1px solid #A7F3D0; border-radius: 8px;"
         )
         tips_layout = QVBoxLayout(tips_frame)
         tips_layout.setContentsMargins(16, 12, 16, 12)
 
         tips_heading = QLabel("Quick Start")
-        tips_heading.setStyleSheet("color: #1D4ED8; font-weight: bold; font-size: 9pt;")
+        tips_heading.setStyleSheet("color: #256B4E; font-weight: bold; font-size: 10pt;")
         tips_layout.addWidget(tips_heading)
 
         tips = QLabel(
@@ -155,7 +156,7 @@ class WelcomeScreen(QWidget):
             "4. Explore scores, charts, and group comparisons\n"
             "5. Export results for publication"
         )
-        tips.setStyleSheet("color: #1E40AF; font-size: 9pt; line-height: 1.6;")
+        tips.setStyleSheet("color: #1E5C3F; font-size: 9pt; line-height: 1.6;")
         tips_layout.addWidget(tips)
 
         right_layout.addWidget(tips_frame)
@@ -167,10 +168,10 @@ class WelcomeScreen(QWidget):
     # ------------------------------------------------------------------
 
     def _load_recent_projects(self):
-        paths: List[str] = self._settings.value("recent_projects", []) or []
+        paths: List[str] = self._settings.get_list("recent_projects", [])
         # Filter to existing files only
         paths = [p for p in paths if os.path.exists(p)]
-        self._settings.setValue("recent_projects", paths)
+        self._settings.set("recent_projects", paths)
 
         self._recent_list.clear()
 
@@ -207,9 +208,10 @@ class WelcomeScreen(QWidget):
     @staticmethod
     def add_recent_project(path: str):
         """Call this whenever a project is saved/opened to update the recents list."""
-        settings = QSettings("SIM DAD LLC", "TASS")
-        paths: list = settings.value("recent_projects", []) or []
+        from services.settings_manager import SettingsManager
+        settings = SettingsManager.instance()
+        paths: list = settings.get_list("recent_projects", [])
         if path in paths:
             paths.remove(path)
         paths.insert(0, path)
-        settings.setValue("recent_projects", paths[:MAX_RECENT])
+        settings.set("recent_projects", paths[:MAX_RECENT])

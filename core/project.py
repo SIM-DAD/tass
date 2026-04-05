@@ -7,6 +7,7 @@ Project manager — read/write .tass project files.
 """
 
 from __future__ import annotations
+import hashlib
 import json
 import os
 import io
@@ -42,21 +43,27 @@ class ProjectManager:
         session_state = session.ui_state.copy()
 
         with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
-            zf.writestr("manifest.json", json.dumps(manifest, indent=2))
-            zf.writestr("analysis_config.json", json.dumps(analysis_config, indent=2))
-            zf.writestr("session_state.json", json.dumps(session_state, indent=2))
-
-            # Save raw DataFrame
+            # Save raw DataFrame and compute integrity hash
+            data_hash = None
             if session.raw_df is not None:
                 buf = io.BytesIO()
                 session.raw_df.to_parquet(buf, index=True)
-                zf.writestr("data.parquet", buf.getvalue())
+                data_bytes = buf.getvalue()
+                data_hash = hashlib.sha256(data_bytes).hexdigest()
+                zf.writestr("data.parquet", data_bytes)
 
             # Save results DataFrame
             if session.results.entry_scores is not None:
                 buf = io.BytesIO()
                 session.results.entry_scores.to_parquet(buf, index=True)
                 zf.writestr("results.parquet", buf.getvalue())
+
+            # Add hash to manifest
+            manifest["data_sha256"] = data_hash
+
+            zf.writestr("manifest.json", json.dumps(manifest, indent=2))
+            zf.writestr("analysis_config.json", json.dumps(analysis_config, indent=2))
+            zf.writestr("session_state.json", json.dumps(session_state, indent=2))
 
             # Chart config placeholder
             chart_config = {"palette": session.ui_state.get("color_palette", "default")}
@@ -78,8 +85,19 @@ class ProjectManager:
 
             raw_df: Optional[pd.DataFrame] = None
             if "data.parquet" in names:
-                buf = io.BytesIO(zf.read("data.parquet"))
-                raw_df = pd.read_parquet(buf)
+                data_bytes = zf.read("data.parquet")
+                # Verify integrity if hash is present
+                expected_hash = manifest.get("data_sha256")
+                if expected_hash:
+                    actual_hash = hashlib.sha256(data_bytes).hexdigest()
+                    if actual_hash != expected_hash:
+                        raise ValueError(
+                            "Project data integrity check failed.\n\n"
+                            f"Expected SHA-256: {expected_hash[:16]}…\n"
+                            f"Actual SHA-256:   {actual_hash[:16]}…\n\n"
+                            "The data.parquet file may have been modified or corrupted."
+                        )
+                raw_df = pd.read_parquet(io.BytesIO(data_bytes))
 
             results_df: Optional[pd.DataFrame] = None
             if "results.parquet" in names:

@@ -100,7 +100,7 @@ class ExportDialog(QDialog):
         self._progress.setFixedHeight(6)
         self._progress.setStyleSheet(
             "QProgressBar { border: none; background-color: #E5E7EB; border-radius: 3px; }"
-            "QProgressBar::chunk { background-color: #2563EB; border-radius: 3px; }"
+            "QProgressBar::chunk { background-color: #2E7D5E; border-radius: 3px; }"
         )
         self._progress.hide()
         layout.addWidget(self._progress)
@@ -121,9 +121,9 @@ class ExportDialog(QDialog):
         self.export_btn = QPushButton("Export")
         self.export_btn.setDefault(True)
         self.export_btn.setStyleSheet(
-            "QPushButton { background-color: #2563EB; color: white; "
+            "QPushButton { background-color: #2E7D5E; color: white; "
             "border-radius: 6px; padding: 8px 24px; font-weight: bold; }"
-            "QPushButton:hover { background-color: #1D4ED8; }"
+            "QPushButton:hover { background-color: #256B4E; }"
             "QPushButton:disabled { background-color: #93C5FD; }"
         )
         self.export_btn.clicked.connect(self._run_export)
@@ -199,6 +199,26 @@ class ExportDialog(QDialog):
                 import pandas as pd
                 group_stats_df = pd.DataFrame(rows)
 
+            # Build method info (used by Excel Method sheet + JSON sidecar)
+            import datetime as _dt
+            method_info = {
+                "TASS Version": "1.0.0",
+                "Export Date": _dt.datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC"),
+                "Text Column": session.column_mapping.text_column or "—",
+                "Group Column": session.column_mapping.group_column or "—",
+                "Entries": session.row_count or len(scores),
+                "Dictionaries": ", ".join(session.analysis_config.selected_dictionaries) or "—",
+                "Preprocessing — Lemmatize": session.analysis_config.__dict__.get("lemmatize", False),
+                "Preprocessing — Stopwords": session.analysis_config.__dict__.get("remove_stopwords", False),
+                "Preprocessing — Min Length": session.analysis_config.__dict__.get("min_token_length", 1),
+                "Scoring Mode": session.analysis_config.__dict__.get("scoring_mode", "Dictionary default"),
+                "Categories Analyzed": len(scores.columns),
+            }
+            if results.group_stats:
+                test_names = set(gs.test_name for gs in results.group_stats.values() if gs.test_name)
+                method_info["Statistical Tests"] = ", ".join(sorted(test_names)) if test_names else "—"
+                method_info["Correction Method"] = session.ui_state.get("correction", "Bonferroni")
+
             if formats["csv"]:
                 try:
                     path = engine.export_csv(scores, raw, metadata_columns=meta_cols)
@@ -212,13 +232,22 @@ class ExportDialog(QDialog):
                 try:
                     path = engine.export_excel(
                         scores, summary, group_stats_df, raw,
-                        metadata_columns=meta_cols
+                        metadata_columns=meta_cols,
+                        method_info=method_info,
                     )
                     exported.append(path)
                 except Exception as e:
                     errors.append(f"Excel: {e}")
                 step += 1
                 self._progress.setValue(int(step / steps * 100))
+
+            # Write reproducibility JSON sidecar alongside any tabular export
+            if formats["csv"] or formats["excel"]:
+                try:
+                    sidecar_path = engine.export_metadata_sidecar(method_info)
+                    exported.append(sidecar_path)
+                except Exception:
+                    pass  # Non-critical; don't block export
 
             if formats["png"] or formats["svg"]:
                 try:

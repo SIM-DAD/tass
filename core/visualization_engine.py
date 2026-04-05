@@ -233,6 +233,61 @@ class VisualizationEngine:
         return fig
 
     # ------------------------------------------------------------------
+    # Scatter plot
+    # ------------------------------------------------------------------
+
+    def scatter_plot(
+        self,
+        scores_df: pd.DataFrame,
+        x_category: str,
+        y_category: str,
+        group_series: Optional[pd.Series] = None,
+        title: Optional[str] = None,
+    ) -> matplotlib.figure.Figure:
+        """
+        Scatter plot of two category scores, optionally colored by group.
+        """
+        fig, ax = self._new_fig()
+
+        x_short = x_category.split("__")[-1] if "__" in x_category else x_category
+        y_short = y_category.split("__")[-1] if "__" in y_category else y_category
+
+        if group_series is not None:
+            combined = pd.DataFrame({
+                "x": scores_df[x_category],
+                "y": scores_df[y_category],
+                "group": group_series,
+            })
+            sns.scatterplot(
+                data=combined, x="x", y="y", hue="group",
+                ax=ax, palette=self.palette, alpha=0.6, s=30,
+            )
+            ax.legend(title="Group", bbox_to_anchor=(1.05, 1), loc="upper left")
+        else:
+            ax.scatter(
+                scores_df[x_category], scores_df[y_category],
+                color=self.palette[0], alpha=0.5, s=30,
+            )
+
+        # Add regression line
+        x_vals = scores_df[x_category].dropna()
+        y_vals = scores_df[y_category].dropna()
+        shared = x_vals.index.intersection(y_vals.index)
+        if len(shared) > 2:
+            from scipy import stats as sp_stats
+            slope, intercept, r, p, _ = sp_stats.linregress(x_vals[shared], y_vals[shared])
+            x_line = np.linspace(x_vals[shared].min(), x_vals[shared].max(), 100)
+            ax.plot(x_line, slope * x_line + intercept, color="#EF4444", linewidth=1.5,
+                    linestyle="--", label=f"r = {r:.3f} (p = {p:.4f})")
+            ax.legend(loc="best")
+
+        ax.set_xlabel(x_short)
+        ax.set_ylabel(y_short)
+        ax.set_title(title or f"{x_short} vs {y_short}")
+        fig.tight_layout()
+        return fig
+
+    # ------------------------------------------------------------------
     # Export
     # ------------------------------------------------------------------
 

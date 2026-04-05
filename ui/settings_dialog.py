@@ -8,9 +8,6 @@ from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QComboBox,
     QPushButton, QFileDialog, QLineEdit, QFormLayout, QGroupBox,
 )
-from PySide6.QtCore import QSettings
-
-
 PALETTES = ["Default (ColorBrewer)", "Colorblind-Safe (viridis)", "Grayscale"]
 
 
@@ -23,7 +20,8 @@ class SettingsDialog(QDialog):
         self.setMinimumWidth(420)
         self.setModal(True)
 
-        self._settings = QSettings("SIM DAD LLC", "TASS")
+        from services.settings_manager import SettingsManager
+        self._settings = SettingsManager.instance()
         self._build_ui()
         self._load_settings()
 
@@ -86,12 +84,12 @@ class SettingsDialog(QDialog):
         layout.addLayout(btn_row)
 
     def _load_settings(self):
-        palette = self._settings.value("viz/palette", PALETTES[0])
+        palette = self._settings.get("viz.palette", PALETTES[0])
         idx = self._palette_combo.findText(palette)
         if idx >= 0:
             self._palette_combo.setCurrentIndex(idx)
 
-        export_path = self._settings.value("export/default_path", "")
+        export_path = self._settings.get("export.default_path", "")
         self._export_path_edit.setText(export_path)
 
     def _browse_export_path(self):
@@ -100,8 +98,8 @@ class SettingsDialog(QDialog):
             self._export_path_edit.setText(path)
 
     def _save_and_close(self):
-        self._settings.setValue("viz/palette", self._palette_combo.currentText())
-        self._settings.setValue("export/default_path", self._export_path_edit.text())
+        self._settings.set("viz.palette", self._palette_combo.currentText())
+        self._settings.set("export.default_path", self._export_path_edit.text())
 
         from core.session import Session
         Session.instance().ui_state["color_palette"] = self._palette_combo.currentText()

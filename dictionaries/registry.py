@@ -119,6 +119,29 @@ class DictionaryRegistry:
         self._builtin: List[Dict[str, Any]] = list(BUILTIN_MANIFEST)
         self._user: List[Dict[str, Any]] = []
         self._cache: Dict[str, Dict] = {}
+        self._enrich_manifest()
+
+    def _enrich_manifest(self):
+        """Add word_count, scoring, n_categories to builtin entries from JSON files."""
+        for entry in self._builtin:
+            if entry.get("optional_download"):
+                continue
+            try:
+                path = os.path.join(BUILTIN_DIR, entry["file"])
+                data = load_dictionary(path)
+                categories = data.get("categories", {})
+                scoring = data.get("scoring", "binary")
+                total_words = 0
+                for cat_data in categories.values():
+                    if isinstance(cat_data, dict):
+                        total_words += len(cat_data)
+                    else:
+                        total_words += len(cat_data)
+                entry["word_count"] = total_words
+                entry["scoring"] = scoring
+                entry["n_categories"] = len(categories)
+            except Exception:
+                pass
 
     def all_entries(self) -> List[Dict[str, Any]]:
         return self._builtin + self._user

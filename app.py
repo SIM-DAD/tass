@@ -29,7 +29,7 @@ class TASSApp(QApplication):
         self._apply_stylesheet()
 
         # Set default font
-        font = QFont("Segoe UI", 10)
+        font = QFont("Segoe UI", 11)
         self.setFont(font)
 
         # Install global exception handler

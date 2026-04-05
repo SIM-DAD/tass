@@ -26,7 +26,7 @@ from PySide6.QtGui import QFont
 # ── License badge styling ────────────────────────────────────────────
 _LICENSE_STYLES = {
     "MIT":                     ("#DCFCE7", "#15803D"),
-    "CC-BY":                   ("#DBEAFE", "#1D4ED8"),
+    "CC-BY":                   ("#D1FAE5", "#256B4E"),
     "CC-BY-SA":                ("#F3E8FF", "#7E22CE"),
     "Apache 2.0":              ("#ECFEFF", "#0E7490"),
     "Princeton WordNet License": ("#FEF3C7", "#B45309"),
@@ -56,6 +56,7 @@ class _DictCard(QFrame):
     def __init__(self, entry: Dict[str, Any], parent=None):
         super().__init__(parent)
         self._entry = entry
+        self.setAccessibleName(f"Dictionary: {entry['display_name']}")
         self.setFrameShape(QFrame.StyledPanel)
         self.setStyleSheet(
             "QFrame { background-color: #FFFFFF; border: 1px solid #E5E7EB; "
@@ -123,9 +124,25 @@ class _DictCard(QFrame):
             cats = entry.get("categories_preview", [])
             if cats:
                 cats_lbl = QLabel("Categories: " + " · ".join(cats[:6]))
-                cats_lbl.setStyleSheet("color: #2563EB; font-size: 8pt;")
+                cats_lbl.setStyleSheet("color: #2E7D5E; font-size: 8pt;")
                 cats_lbl.setWordWrap(True)
                 text_col.addWidget(cats_lbl)
+
+            # Metadata line: word count, scoring mode, category count
+            meta_parts = []
+            wc = entry.get("word_count")
+            if wc:
+                meta_parts.append(f"{wc:,} words")
+            nc = entry.get("n_categories")
+            if nc:
+                meta_parts.append(f"{nc} {'category' if nc == 1 else 'categories'}")
+            sc = entry.get("scoring")
+            if sc:
+                meta_parts.append(f"scoring: {sc}")
+            if meta_parts:
+                meta_lbl = QLabel(" · ".join(meta_parts))
+                meta_lbl.setStyleSheet("color: #9CA3AF; font-size: 8pt;")
+                text_col.addWidget(meta_lbl)
 
         layout.addLayout(text_col, 1)
 
@@ -181,21 +198,21 @@ class AnalysisConfigPanel(QWidget):
         self._status_bar = QFrame()
         self._status_bar.setFixedHeight(44)
         self._status_bar.setStyleSheet(
-            "background-color: #EFF6FF; border-bottom: 1px solid #BFDBFE;"
+            "background-color: #ECFDF5; border-bottom: 1px solid #A7F3D0;"
         )
         status_layout = QHBoxLayout(self._status_bar)
         status_layout.setContentsMargins(20, 0, 20, 0)
 
         self._status_lbl = QLabel()
-        self._status_lbl.setStyleSheet("color: #1E40AF; font-size: 9pt;")
+        self._status_lbl.setStyleSheet("color: #1E5C3F; font-size: 9pt;")
         status_layout.addWidget(self._status_lbl)
         status_layout.addStretch()
 
         self._import_btn = QPushButton("← Import Data First")
         self._import_btn.setStyleSheet(
-            "QPushButton { background-color: transparent; color: #2563EB; "
+            "QPushButton { background-color: transparent; color: #2E7D5E; "
             "border: 1px solid #93C5FD; border-radius: 4px; padding: 4px 12px; font-size: 9pt; }"
-            "QPushButton:hover { background-color: #DBEAFE; }"
+            "QPushButton:hover { background-color: #D1FAE5; }"
         )
         self._import_btn.clicked.connect(
             lambda: self.window().navigate_to("import") if hasattr(self.window(), "navigate_to") else None
@@ -259,9 +276,9 @@ class AnalysisConfigPanel(QWidget):
         # Import custom dictionary
         import_dict_btn = QPushButton("+ Import Custom Dictionary…")
         import_dict_btn.setStyleSheet(
-            "QPushButton { background-color: transparent; color: #2563EB; "
+            "QPushButton { background-color: transparent; color: #2E7D5E; "
             "border: 1px dashed #93C5FD; border-radius: 6px; padding: 8px; font-size: 9pt; }"
-            "QPushButton:hover { background-color: #EFF6FF; }"
+            "QPushButton:hover { background-color: #ECFDF5; }"
         )
         import_dict_btn.clicked.connect(self._import_custom_dictionary)
         left_layout.addWidget(import_dict_btn)
@@ -295,6 +312,26 @@ class AnalysisConfigPanel(QWidget):
         for cb in (self._level_word, self._level_entry, self._level_doc):
             levels_layout.addWidget(cb)
         right_layout.addWidget(levels_group)
+
+        # Scoring mode
+        scoring_group = QGroupBox("Scoring Mode")
+        scoring_layout = QVBoxLayout(scoring_group)
+        scoring_layout.setSpacing(6)
+
+        self._scoring_combo = QComboBox()
+        self._scoring_combo.addItems([
+            "Dictionary default",
+            "Count (raw frequency)",
+            "TF-IDF",
+        ])
+        self._scoring_combo.setToolTip(
+            "Dictionary default: use each dictionary's built-in scoring (binary %, weighted, or count).\n"
+            "Count: raw number of matched tokens per category.\n"
+            "TF-IDF: term frequency × inverse document frequency — weights rare matches higher."
+        )
+        scoring_layout.addWidget(self._scoring_combo)
+
+        right_layout.addWidget(scoring_group)
 
         # Preprocessing
         prep_group = QGroupBox("Preprocessing")
@@ -529,10 +566,19 @@ class AnalysisConfigPanel(QWidget):
             "min_token_length": self._min_len_spin.value(),
         }
 
-        # Launch worker + progress dialog
-        self._launch_worker(session, dictionaries, preprocessor_kwargs)
+        # Scoring mode override
+        scoring_map = {
+            "Dictionary default": None,
+            "Count (raw frequency)": "count",
+            "TF-IDF": "tfidf",
+        }
+        scoring_override = scoring_map.get(self._scoring_combo.currentText())
 
-    def _launch_worker(self, session, dictionaries: list, preprocessor_kwargs: dict):
+        # Launch worker + progress dialog
+        self._launch_worker(session, dictionaries, preprocessor_kwargs, scoring_override)
+
+    def _launch_worker(self, session, dictionaries: list, preprocessor_kwargs: dict,
+                        scoring_override=None):
         from core.workers import AnalysisWorker
         from ui.progress_dialog import ProgressDialog
 
@@ -543,6 +589,7 @@ class AnalysisConfigPanel(QWidget):
             dictionaries=dictionaries,
             analysis_config=session.analysis_config,
             preprocessor_kwargs=preprocessor_kwargs,
+            scoring_override=scoring_override,
         )
 
         self._progress = ProgressDialog("Running Analysis…", parent=self)

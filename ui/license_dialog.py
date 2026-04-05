@@ -105,7 +105,7 @@ class LicenseDialog(QDialog):
 
         purchase_lbl = QLabel(
             "Don't have a license? <a href='https://simdadllc.com/tass' "
-            "style='color:#2563EB;'>Purchase TASS →</a>"
+            "style='color:#2E7D5E;'>Purchase TASS →</a>"
         )
         purchase_lbl.setOpenExternalLinks(True)
         purchase_lbl.setStyleSheet("font-size: 9pt; color: #555555;")

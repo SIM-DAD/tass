@@ -187,9 +187,9 @@ class VisualizationPanel(QWidget):
 
         render_btn = QPushButton("Render Chart")
         render_btn.setStyleSheet(
-            "QPushButton { background-color: #2563EB; color: white; "
+            "QPushButton { background-color: #2E7D5E; color: white; "
             "border-radius: 6px; padding: 6px 16px; font-weight: bold; }"
-            "QPushButton:hover { background-color: #1D4ED8; }"
+            "QPushButton:hover { background-color: #256B4E; }"
         )
         render_btn.clicked.connect(self._render)
         tb_layout.addWidget(render_btn)
