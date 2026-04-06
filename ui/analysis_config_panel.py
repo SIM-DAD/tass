@@ -17,7 +17,7 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QCheckBox, QScrollArea, QFrame, QFileDialog, QMessageBox,
     QGroupBox, QSpinBox, QSizePolicy, QButtonGroup, QListWidget,
-    QListWidgetItem, QSplitter,
+    QListWidgetItem, QSplitter, QComboBox,
 )
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QFont

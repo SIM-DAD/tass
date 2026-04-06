@@ -340,6 +340,12 @@ class MainWindow(QMainWindow):
         widget = self._get_or_load_panel(panel_id)
         self._stack.setCurrentWidget(widget)
 
+        # Explicitly refresh panel state — showEvent is unreliable in QStackedWidget
+        if hasattr(widget, "_refresh_from_session"):
+            widget._refresh_from_session()
+        elif hasattr(widget, "_refresh_categories"):
+            widget._refresh_categories()
+
         # Update sidebar button states
         for pid, btn in self._sidebar_buttons.items():
             btn.set_active(pid == panel_id)

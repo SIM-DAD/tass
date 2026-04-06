@@ -153,7 +153,13 @@ class _GroupConfigPanel(QFrame):
         self.dv_list.setStyleSheet(
             "QListWidget { border: 1px solid #E5E7EB; border-radius: 4px; "
             "background-color: #FFFFFF; }"
-            "QListWidget::item { padding: 3px 4px; }"
+            "QListWidget::item { padding: 4px 6px; }"
+            "QListWidget::indicator { width: 16px; height: 16px; "
+            "  border: 1px solid #CCCCCC; border-radius: 3px; "
+            "  background-color: #FFFFFF; }"
+            "QListWidget::indicator:checked { "
+            "  background-color: #2E7D5E; border-color: #2E7D5E; }"
+            "QListWidget::indicator:hover { border-color: #2E7D5E; }"
         )
         self.dv_list.setMinimumHeight(80)
         self.dv_list.setMaximumHeight(160)
