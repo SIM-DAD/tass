@@ -14,13 +14,6 @@ last_session_handoff: meta/handoffs/session/2026-04-15-00-00-LLC-BIZ.md
 
 # TASS — Status
 
-id: LLC-001
-status: active
-next_action: 82K dataset validated; progress bar, new dictionaries (Warriner VAD, Empath), and custom dictionary build all confirmed working. Pre-YubiKey prep: finish v1.0 remaining work (T-Lex dictionaries, benchmark corpus) in parallel with the wait. On YubiKey arrival: sign installer, Gumroad publish. Day 5-7 of the LLC rollout. Deadline May 31, 2026.
-blockers: YubiKey delivery (cert validated but not issued). Pre-YubiKey work can proceed on v1.0 content.
-last_session: 2026-04-15T00:00:00
-last_session_handoff: meta/handoffs/session/2026-04-15-00-00-LLC-BIZ.md
-
 ## Roadmap
 
 ### v1.0.0 — Launch (May 31, 2026)
