@@ -30,6 +30,9 @@ TASS_Setup_*.exe
 # Internal / project management (not for public repo)
 _internal/
 
+# Reference textbooks (commercially-published PDFs; local-only)
+ref-books/
+
 # IDE / tooling
 .vscode/
 .idea/
