@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "scripts": {
     "start": "npx remotion studio",
-    "build": "npx remotion render TassDemo out/tass-demo.mp4 --codec=h264"
+    "build": "npx remotion render TassDemo out/tass-demo.mp4 --codec=h264",
+    "build:short01": "npx remotion render TassShort01 out/tass-short-01.mp4 --codec=h264"
   },
   "dependencies": {
     "@remotion/cli": "^4.0.0",
