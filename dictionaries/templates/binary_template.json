@@ -1,0 +1,21 @@
+{
+  "name": "My Custom Dictionary",
+  "version": "1.0",
+  "description": "A brief description of what this dictionary measures.",
+  "citation": "Author (Year). Title. Journal.",
+  "license": "CC-BY",
+  "scoring": "binary",
+  "categories": {
+    "category_a": [
+      "word1",
+      "word2",
+      "word3",
+      "multi word phrase"
+    ],
+    "category_b": [
+      "word4",
+      "word5",
+      "word6"
+    ]
+  }
+}

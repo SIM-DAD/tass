@@ -48,11 +48,12 @@ class _ChartTypeSidebar(QFrame):
     """Left panel: radio buttons for chart type + category/palette selectors."""
 
     CHART_TYPES = [
-        ("bar",    "Bar Chart",   "Mean category scores"),
-        ("cloud",  "Word Cloud",  "Matched word frequencies"),
-        ("box",    "Box Plot",    "Score distributions by group"),
-        ("violin", "Violin Plot", "Score distributions (richer)"),
-        ("heat",   "Heatmap",     "Score matrix across categories"),
+        ("bar",     "Bar Chart",    "Mean category scores"),
+        ("cloud",   "Word Cloud",   "Matched word frequencies"),
+        ("box",     "Box Plot",     "Score distributions by group"),
+        ("violin",  "Violin Plot",  "Score distributions (richer)"),
+        ("scatter", "Scatter Plot", "Correlation between two categories"),
+        ("heat",    "Heatmap",      "Score matrix across categories"),
     ]
 
     def __init__(self, parent=None):
@@ -98,6 +99,17 @@ class _ChartTypeSidebar(QFrame):
         self.category_combo.setToolTip("Select which score category to chart")
         layout.addWidget(self.category_combo)
 
+        # Second category selector (for scatter Y axis)
+        self._y_cat_hdr = QLabel("Y Category")
+        self._y_cat_hdr.setFont(QFont("Segoe UI", 9, QFont.Bold))
+        self._y_cat_hdr.setVisible(False)
+        layout.addWidget(self._y_cat_hdr)
+
+        self.y_category_combo = QComboBox()
+        self.y_category_combo.setToolTip("Select the Y-axis category for scatter plot")
+        self.y_category_combo.setVisible(False)
+        layout.addWidget(self.y_category_combo)
+
         layout.addSpacing(8)
 
         # Palette selector
@@ -120,13 +132,28 @@ class _ChartTypeSidebar(QFrame):
 
     def populate_categories(self, categories: List[str]):
         self.category_combo.clear()
+        self.y_category_combo.clear()
         for cat in categories:
             display = cat.split("__")[-1] if "__" in cat else cat
             self.category_combo.addItem(display, userData=cat)
+            self.y_category_combo.addItem(display, userData=cat)
+        # Default Y to second category if available
+        if self.y_category_combo.count() > 1:
+            self.y_category_combo.setCurrentIndex(1)
+
+    def update_scatter_visibility(self):
+        """Show/hide the Y category combo based on chart type."""
+        is_scatter = self.selected_chart_type == "scatter"
+        self._y_cat_hdr.setVisible(is_scatter)
+        self.y_category_combo.setVisible(is_scatter)
 
     @property
     def selected_category(self) -> Optional[str]:
         return self.category_combo.currentData()
+
+    @property
+    def selected_y_category(self) -> Optional[str]:
+        return self.y_category_combo.currentData()
 
     @property
     def selected_palette(self) -> str:
@@ -266,7 +293,7 @@ class VisualizationPanel(QWidget):
     # ------------------------------------------------------------------
 
     def _on_chart_type_changed(self, btn):
-        pass  # Could auto-render; for now user clicks Render
+        self._sidebar.update_scatter_visibility()
 
     def _render(self):
         from core.session import Session
@@ -329,6 +356,28 @@ class VisualizationPanel(QWidget):
                 else:
                     fig = viz.violin_plot(results.entry_scores, group_series, cat)
                     title = f"Violin Plot — {cat.split('__')[-1]}"
+
+            elif chart_type == "scatter":
+                x_cat = self._sidebar.selected_category
+                y_cat = self._sidebar.selected_y_category
+                if not x_cat or not y_cat:
+                    QMessageBox.warning(self, "Select Categories", "Select both X and Y categories for the scatter plot.")
+                    return
+                if x_cat == y_cat:
+                    QMessageBox.warning(self, "Same Category", "Select two different categories for X and Y axes.")
+                    return
+
+                group_col = session.column_mapping.group_column
+                group_series = None
+                if group_col and session.raw_df is not None and group_col in session.raw_df.columns:
+                    group_series = session.raw_df[group_col].reset_index(drop=True)
+                    group_series = group_series.iloc[:len(results.entry_scores)]
+
+                x_label = x_cat.split("__")[-1] if "__" in x_cat else x_cat
+                y_label = y_cat.split("__")[-1] if "__" in y_cat else y_cat
+                fig = viz.scatter_plot(results.entry_scores, x_cat, y_cat, group_series,
+                                       title=f"{x_label} vs {y_label}")
+                title = f"Scatter Plot — {x_label} vs {y_label}"
 
             elif chart_type == "heat":
                 stats_eng = StatisticsEngine()

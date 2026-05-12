@@ -71,6 +71,7 @@ class _StepHeader(QWidget):
     def __init__(self, current: int, total: int, title: str, subtitle: str, parent=None):
         super().__init__(parent)
         self.setAccessibleName(f"Step {current} of {total}: {title}")
+        self.setAttribute(Qt.WA_StyledBackground, True)
         self.setStyleSheet("background-color: #F9FAFB; border-bottom: 1px solid #E5E7EB;")
         self.setFixedHeight(88)
 
@@ -582,6 +583,23 @@ class ImportWizard(QWidget):
         except Exception as exc:
             QMessageBox.critical(self, "Import Error", str(exc))
             return
+
+        # Trial row limit check — warn at import, not at analysis time
+        from services.license import LicenseService, TRIAL_ROW_LIMIT
+        lic = LicenseService()
+        if lic.is_trial_row_limit_exceeded(len(df)):
+            reply = QMessageBox.warning(
+                self,
+                "Trial Row Limit",
+                f"Your file has {len(df):,} rows, but the trial is limited to "
+                f"{TRIAL_ROW_LIMIT:,} rows.\n\n"
+                f"Would you like to import only the first {TRIAL_ROW_LIMIT:,} rows?",
+                QMessageBox.Yes | QMessageBox.Cancel,
+                QMessageBox.Yes,
+            )
+            if reply == QMessageBox.Cancel:
+                return
+            df = df.head(TRIAL_ROW_LIMIT).reset_index(drop=True)
 
         self._df = df
         col_infos = detect_column_types(df)

@@ -14,6 +14,25 @@ from core.citation import citation_block
 from core.formatting import format_p_apa, sig_stars, format_stat_with_df, effect_size_label
 
 
+def safe_to_csv(df: pd.DataFrame, path: str, **kwargs):
+    """Write a DataFrame to CSV without scientific notation.
+
+    Integer-like float columns (e.g., numeric IDs read as float64) are
+    cast to nullable Int64 so they export as plain integers instead of
+    scientific notation like 2.026e+13.
+    """
+    import numpy as np
+    out = df.copy()
+    for col in out.columns:
+        if out[col].dtype == float:
+            non_null = out[col].dropna()
+            if len(non_null) > 0:
+                as_int = non_null.astype(np.int64)
+                if (non_null == as_int.astype(float)).all():
+                    out[col] = out[col].astype("Int64")
+    out.to_csv(path, index=False, encoding="utf-8", **kwargs)
+
+
 class ExportEngine:
     def __init__(self, output_dir: str):
         self.output_dir = output_dir
@@ -29,6 +48,7 @@ class ExportEngine:
         raw_df: Optional[pd.DataFrame] = None,
         filename: str = "tass_results.csv",
         metadata_columns: Optional[List[str]] = None,
+        clean: bool = False,
     ) -> str:
         path = os.path.join(self.output_dir, filename)
 
@@ -38,11 +58,11 @@ class ExportEngine:
         else:
             out = entry_scores.copy()
 
-        out.to_csv(path, index=False, encoding="utf-8")
+        safe_to_csv(out, path)
 
-        # Append citation block
-        with open(path, "a", encoding="utf-8") as fh:
-            fh.write(citation_block())
+        if not clean:
+            with open(path, "a", encoding="utf-8") as fh:
+                fh.write(citation_block())
 
         return path
 
@@ -248,6 +268,129 @@ class ExportEngine:
         path = os.path.join(self.output_dir, filename)
         with open(path, "w", encoding="utf-8") as fh:
             json.dump(method_info, fh, indent=2, default=str)
+        return path
+
+    # ------------------------------------------------------------------
+    # Re-import scored TASS data
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def reimport_csv(path: str) -> Dict[str, Any]:
+        """Parse a previously exported TASS CSV back into components.
+
+        Returns a dict with:
+          - raw_df: the full DataFrame
+          - text_column: name of the text column (first non-score column)
+          - score_columns: list of Dict__dimension column names
+          - entry_scores: DataFrame of just the score columns
+          - metadata_columns: any columns that are neither text nor scores
+          - dictionaries: list of unique dictionary names found
+        """
+        # Read the CSV, stopping before any citation footer
+        lines = []
+        with open(path, "r", encoding="utf-8") as fh:
+            for line in fh:
+                if line.strip().startswith("--- TASS Citation"):
+                    break
+                lines.append(line)
+
+        from io import StringIO
+        df = pd.read_csv(StringIO("".join(lines)))
+
+        # Identify score columns (contain __ separator from TASS naming)
+        score_cols = [c for c in df.columns if "__" in c]
+        non_score_cols = [c for c in df.columns if c not in score_cols]
+
+        # Heuristic: the text column is the first non-score column with
+        # string dtype and average length > 20 chars
+        text_column = ""
+        metadata_columns = []
+        for col in non_score_cols:
+            if not text_column and df[col].dtype == object:
+                avg_len = df[col].dropna().astype(str).str.len().mean()
+                if avg_len > 20:
+                    text_column = col
+                    continue
+            metadata_columns.append(col)
+
+        # If no long-text column found, use the first string column
+        if not text_column and non_score_cols:
+            for col in non_score_cols:
+                if df[col].dtype == object:
+                    text_column = col
+                    metadata_columns.remove(col)
+                    break
+
+        dictionaries = list(dict.fromkeys(
+            c.split("__", 1)[0] for c in score_cols
+        ))
+
+        return {
+            "raw_df": df,
+            "text_column": text_column,
+            "score_columns": score_cols,
+            "entry_scores": df[score_cols].copy() if score_cols else pd.DataFrame(),
+            "metadata_columns": metadata_columns,
+            "dictionaries": dictionaries,
+        }
+
+    # ------------------------------------------------------------------
+    # Codebook export
+    # ------------------------------------------------------------------
+
+    def export_codebook(
+        self,
+        entry_scores: pd.DataFrame,
+        method_info: Dict[str, Any],
+        filename: str = "tass_codebook",
+        fmt: str = "json",
+    ) -> str:
+        """Export a codebook documenting every scored column.
+
+        The codebook maps each column name back to its source dictionary
+        and dimension, along with the analysis configuration used.
+        """
+        columns = []
+        for col in entry_scores.columns:
+            if "__" in col:
+                dict_name, dimension = col.split("__", 1)
+            else:
+                dict_name, dimension = col, col
+            columns.append({
+                "column": col,
+                "dictionary": dict_name,
+                "dimension": dimension,
+            })
+
+        codebook = {
+            "tass_version": method_info.get("TASS Version", "1.0.0"),
+            "export_date": method_info.get("Export Date", ""),
+            "text_column": method_info.get("Text Column", ""),
+            "group_column": method_info.get("Group Column", ""),
+            "entries": method_info.get("Entries", 0),
+            "scoring_mode": method_info.get("Scoring Mode", ""),
+            "preprocessing": {
+                "lemmatize": method_info.get("Preprocessing — Lemmatize", False),
+                "stopwords": method_info.get("Preprocessing — Stopwords", False),
+                "min_token_length": method_info.get("Preprocessing — Min Length", 1),
+            },
+            "dictionaries": method_info.get("Dictionaries", "").split(", "),
+            "columns": columns,
+        }
+
+        if fmt == "yaml":
+            import yaml
+            ext = ".yaml"
+            path = os.path.join(self.output_dir, filename + ext)
+            with open(path, "w", encoding="utf-8") as fh:
+                yaml.dump(codebook, fh, default_flow_style=False, sort_keys=False)
+        else:
+            import json
+            ext = ".json"
+            path = os.path.join(self.output_dir, filename + ext)
+            with open(path, "w", encoding="utf-8") as fh:
+                json.dump(codebook, fh, indent=2, default=str)
+
         return path
 
     # ------------------------------------------------------------------

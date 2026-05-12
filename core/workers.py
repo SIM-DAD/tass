@@ -63,7 +63,16 @@ class AnalysisWorker(QThread):
             **self.preprocessor_kwargs,
         }
         preprocessor = Preprocessor(**preprocessor_opts)
-        token_lists = preprocessor.process_series(self.raw_df[self.text_column])
+
+        def on_preprocess_progress(done, n):
+            if self._cancelled:
+                return
+            self.progress.emit(done, n, f"Tokenizing {done:,} / {n:,} entries...")
+
+        token_lists = preprocessor.process_series(
+            self.raw_df[self.text_column],
+            progress_callback=on_preprocess_progress,
+        )
 
         alog.log_section("Analysis Run")
         alog.log(f"Text column: {self.text_column}")
@@ -89,10 +98,14 @@ class AnalysisWorker(QThread):
 
         self.progress.emit(0, total, "Analyzing text...")
 
+        _last_report = [0]
+
         def on_progress(done, n):
             if self._cancelled:
                 return
-            self.progress.emit(done, n, f"Analyzed {done:,} / {n:,} entries...")
+            if done - _last_report[0] >= 500 or done == n:
+                _last_report[0] = done
+                self.progress.emit(done, n, f"Analyzed {done:,} / {n:,} entries...")
 
         entry_scores, word_matches = engine.analyze(
             token_lists,

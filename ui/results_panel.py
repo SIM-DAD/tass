@@ -200,7 +200,7 @@ class _ScoresTab(QWidget):
         path, _ = QFileDialog.getSaveFileName(self, "Export Scores", "", "CSV Files (*.csv)")
         if path:
             try:
-                self._df.to_csv(path, index=False)
+                from core.export_engine import safe_to_csv; safe_to_csv(self._df, path)
                 QMessageBox.information(self, "Exported", f"Scores saved to:\n{path}")
             except Exception as exc:
                 QMessageBox.critical(self, "Export Error", str(exc))
@@ -453,7 +453,7 @@ class _SummaryTab(QWidget):
         path, _ = QFileDialog.getSaveFileName(self, "Export Summary", "", "CSV Files (*.csv)")
         if path:
             try:
-                self._df.to_csv(path, index=False)
+                from core.export_engine import safe_to_csv; safe_to_csv(self._df, path)
                 QMessageBox.information(self, "Exported", f"Summary saved to:\n{path}")
             except Exception as exc:
                 QMessageBox.critical(self, "Export Error", str(exc))
@@ -592,7 +592,7 @@ class _CorrelationTab(QWidget):
         path, _ = QFileDialog.getSaveFileName(self, "Export Correlation Matrix", "", "CSV Files (*.csv)")
         if path:
             try:
-                self._df.to_csv(path)
+                from core.export_engine import safe_to_csv; safe_to_csv(self._df, path)
                 QMessageBox.information(self, "Exported", f"Correlation matrix saved to:\n{path}")
             except Exception as exc:
                 QMessageBox.critical(self, "Export Error", str(exc))
@@ -681,7 +681,7 @@ class _CoverageTab(QWidget):
         path, _ = QFileDialog.getSaveFileName(self, "Export Coverage", "", "CSV Files (*.csv)")
         if path:
             try:
-                self._df.to_csv(path, index=False)
+                from core.export_engine import safe_to_csv; safe_to_csv(self._df, path)
                 QMessageBox.information(self, "Exported", f"Coverage saved to:\n{path}")
             except Exception as exc:
                 QMessageBox.critical(self, "Export Error", str(exc))
@@ -842,7 +842,7 @@ class _KWICTab(QWidget):
         path, _ = QFileDialog.getSaveFileName(self, "Export KWIC", "", "CSV Files (*.csv)")
         if path:
             try:
-                self._kwic_data.to_csv(path, index=False)
+                from core.export_engine import safe_to_csv; safe_to_csv(self._kwic_data, path)
                 QMessageBox.information(self, "Exported", f"KWIC saved to:\n{path}")
             except Exception as exc:
                 QMessageBox.critical(self, "Export Error", str(exc))

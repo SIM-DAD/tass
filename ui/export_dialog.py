@@ -75,7 +75,22 @@ class ExportDialog(QDialog):
         self.cb_svg.setChecked(False)
         fmt_layout.addWidget(self.cb_svg)
 
+        self.cb_codebook = QCheckBox("Codebook (JSON)  —  Column definitions, dictionaries, scoring config")
+        self.cb_codebook.setChecked(False)
+        fmt_layout.addWidget(self.cb_codebook)
+
         layout.addWidget(fmt_box)
+
+        # ── Options ─────────────────────────────────────────────────────
+        opt_box = QGroupBox("Options")
+        opt_box.setFont(QFont("Segoe UI", 9, QFont.Bold))
+        opt_layout = QVBoxLayout(opt_box)
+
+        self.cb_clean = QCheckBox("Clean CSV  —  No citation footer (for programmatic re-import)")
+        self.cb_clean.setChecked(False)
+        opt_layout.addWidget(self.cb_clean)
+
+        layout.addWidget(opt_box)
 
         # ── Output directory ─────────────────────────────────────────
         dir_box = QGroupBox("Output Directory")
@@ -163,10 +178,11 @@ class ExportDialog(QDialog):
             return
 
         formats = {
-            "csv":   self.cb_csv.isChecked(),
-            "excel": self.cb_excel.isChecked(),
-            "png":   self.cb_png.isChecked(),
-            "svg":   self.cb_svg.isChecked(),
+            "csv":      self.cb_csv.isChecked(),
+            "excel":    self.cb_excel.isChecked(),
+            "png":      self.cb_png.isChecked(),
+            "svg":      self.cb_svg.isChecked(),
+            "codebook": self.cb_codebook.isChecked(),
         }
         if not any(formats.values()):
             QMessageBox.warning(self, "No Format", "Select at least one output format.")
@@ -221,7 +237,11 @@ class ExportDialog(QDialog):
 
             if formats["csv"]:
                 try:
-                    path = engine.export_csv(scores, raw, metadata_columns=meta_cols)
+                    path = engine.export_csv(
+                        scores, raw,
+                        metadata_columns=meta_cols,
+                        clean=self.cb_clean.isChecked(),
+                    )
                     exported.append(path)
                 except Exception as e:
                     errors.append(f"CSV: {e}")
@@ -248,6 +268,15 @@ class ExportDialog(QDialog):
                     exported.append(sidecar_path)
                 except Exception:
                     pass  # Non-critical; don't block export
+
+            if formats["codebook"]:
+                try:
+                    path = engine.export_codebook(scores, method_info)
+                    exported.append(path)
+                except Exception as e:
+                    errors.append(f"Codebook: {e}")
+                step += 1
+                self._progress.setValue(int(step / steps * 100))
 
             if formats["png"] or formats["svg"]:
                 try:

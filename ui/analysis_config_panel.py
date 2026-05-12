@@ -426,7 +426,7 @@ class AnalysisConfigPanel(QWidget):
             self,
             "Import Custom Dictionary",
             "",
-            "Dictionary Files (*.json);;All Files (*)",
+            "All Supported (*.json *.csv *.xlsx *.xls);;JSON (*.json);;CSV (*.csv);;Excel (*.xlsx *.xls);;All Files (*)",
         )
         if not path:
             return

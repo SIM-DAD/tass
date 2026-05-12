@@ -8,6 +8,12 @@ import sys
 import os
 import traceback
 
+# Tell Windows this is its own app, not a Python child process.
+# This makes the taskbar show TASS's icon instead of python.exe's icon.
+if sys.platform == "win32":
+    import ctypes
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("com.simdadllc.tass")
+
 from PySide6.QtWidgets import QApplication, QMessageBox, QSplashScreen
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QFont, QPixmap, QColor

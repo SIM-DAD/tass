@@ -64,6 +64,8 @@ class ProgressDialog(QDialog):
 
     def update_progress(self, done: int, total: int, message: str = ""):
         if total > 0:
+            if self._progress.maximum() == 0:
+                self._progress.setMaximum(100)
             pct = int(done / total * 100)
             self._progress.setValue(pct)
             self._progress.setFormat(f"{pct}%  ({done:,} / {total:,})")

@@ -130,13 +130,25 @@ class Preprocessor:
                 ngrams.append(" ".join(tokens[i:i + n]))
         return ngrams
 
-    def process_series(self, series: pd.Series) -> List[List[str]]:
+    def process_series(
+        self,
+        series: pd.Series,
+        progress_callback=None,
+    ) -> List[List[str]]:
         """
         Tokenize every entry in a pandas Series.
         Returns a list of token lists (preserves index order).
+
+        progress_callback: optional (completed, total) callable for progress reporting.
         """
         self._ensure_ready()
-        return [self.tokenize(text) for text in series]
+        n = len(series)
+        result = []
+        for i, text in enumerate(series):
+            result.append(self.tokenize(text))
+            if progress_callback and (i % 500 == 0 or i == n - 1):
+                progress_callback(i + 1, n)
+        return result
 
     def process_df(self, df: pd.DataFrame, text_column: str) -> pd.Series:
         """

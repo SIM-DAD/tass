@@ -43,7 +43,7 @@ def _make_section_table(headers: List[str], rows: List[List], parent=None) -> QT
     table.setSelectionMode(QAbstractItemView.SingleSelection)
     table.horizontalHeader().setSectionResizeMode(QHeaderView.Interactive)
     table.horizontalHeader().setStretchLastSection(True)
-    table.verticalHeader().setDefaultSectionSize(24)
+    table.verticalHeader().setDefaultSectionSize(36)
     table.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
     table.verticalHeader().setVisible(False)
     table.setFont(QFont("Segoe UI", 10))
@@ -61,10 +61,14 @@ def _make_section_table(headers: List[str], rows: List[List], parent=None) -> QT
             table.setItem(r, c, item)
 
     table.resizeColumnsToContents()
+    # Add padding to columns so text isn't crammed
+    hdr = table.horizontalHeader()
+    for c in range(table.columnCount()):
+        hdr.resizeSection(c, hdr.sectionSize(c) + 24)
     # Size to content: header height + rows + small margin
     row_h = table.verticalHeader().defaultSectionSize()
     header_h = table.horizontalHeader().height()
-    table.setFixedHeight(min(header_h + row_h * len(rows) + 4, 400))
+    table.setFixedHeight(min(header_h + row_h * len(rows) + 4, 500))
     return table
 
 
@@ -773,7 +777,8 @@ class ComparePanel(QWidget):
                 rows.append(row)
 
             df = pd.DataFrame(rows)
-            df.to_csv(path, index=False)
+            from core.export_engine import safe_to_csv
+            safe_to_csv(df, path)
             from core.citation import citation_block
             with open(path, "a", encoding="utf-8") as fh:
                 fh.write(citation_block())

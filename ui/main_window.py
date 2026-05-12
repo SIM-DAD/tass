@@ -268,6 +268,10 @@ class MainWindow(QMainWindow):
         import_act.triggered.connect(lambda: self.navigate_to("import"))
         file_menu.addAction(import_act)
 
+        reimport_act = QAction("Re-import &Scored Data…", self)
+        reimport_act.triggered.connect(self._reimport_scored)
+        file_menu.addAction(reimport_act)
+
         file_menu.addSeparator()
 
         exit_act = QAction("E&xit", self)
@@ -496,6 +500,39 @@ class MainWindow(QMainWindow):
             self.set_status(f"Saved: {path}")
         except Exception as exc:
             QMessageBox.critical(self, "Error Saving Project", str(exc))
+
+    def _reimport_scored(self):
+        """Re-import a previously exported TASS CSV into the current session."""
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Re-import Scored TASS Data", "",
+            "CSV Files (*.csv);;All Files (*)"
+        )
+        if not path:
+            return
+        try:
+            from core.export_engine import ExportEngine
+            from core.session import Session
+
+            result = ExportEngine.reimport_csv(path)
+            session = Session.instance()
+
+            session.raw_df = result["raw_df"]
+            session.column_mapping.text_column = result["text_column"]
+            session.column_mapping.metadata_columns = result["metadata_columns"]
+            session.analysis_config.selected_dictionaries = result["dictionaries"]
+            session.results.entry_scores = result["entry_scores"]
+
+            self.navigate_to("results")
+            self.set_status(f"Re-imported {len(result['raw_df'])} entries from {_os.path.basename(path)}")
+            QMessageBox.information(
+                self, "Re-import Complete",
+                f"Loaded {len(result['raw_df'])} entries with "
+                f"{len(result['score_columns'])} score columns.\n\n"
+                f"Dictionaries detected: {', '.join(result['dictionaries'])}\n"
+                f"Text column: {result['text_column'] or '(none detected)'}"
+            )
+        except Exception as exc:
+            QMessageBox.critical(self, "Re-import Error", str(exc))
 
     def _open_export(self):
         from ui.export_dialog import ExportDialog

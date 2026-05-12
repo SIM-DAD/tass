@@ -13,15 +13,15 @@ from PySide6.QtGui import QClipboard, QGuiApplication
 
 CITATIONS = {
     "APA": (
-        "Doe, J., & Smith, A. (2026). TASS: Text Analysis for Social Scientists "
+        "Leith, A. P. (2026). TASS: Text Analysis for Social Scientists "
         "(Version 1.0.0) [Software]. SIM DAD LLC. https://doi.org/10.5281/zenodo.XXXXXXX"
     ),
     "MLA": (
-        'Doe, Jane, and Alex Smith. TASS: Text Analysis for Social Scientists. '
+        'Leith, Alex P. TASS: Text Analysis for Social Scientists. '
         "Version 1.0.0, SIM DAD LLC, 2026, https://doi.org/10.5281/zenodo.XXXXXXX."
     ),
     "Chicago": (
-        "Doe, Jane, and Alex Smith. 2026. TASS: Text Analysis for Social Scientists. "
+        "Leith, Alex P. 2026. TASS: Text Analysis for Social Scientists. "
         "Version 1.0.0. SIM DAD LLC. https://doi.org/10.5281/zenodo.XXXXXXX."
     ),
 }

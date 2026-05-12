@@ -1,0 +1,22 @@
+{
+  "name": "My Weighted Dictionary",
+  "version": "1.0",
+  "description": "A dictionary with numeric scores per word (e.g., sentiment valence, intensity ratings).",
+  "citation": "Author (Year). Title. Journal.",
+  "license": "CC-BY",
+  "scoring": "weighted",
+  "categories": {
+    "positive_affect": {
+      "happy": 3.5,
+      "joyful": 4.2,
+      "content": 2.1,
+      "excited": 3.8
+    },
+    "negative_affect": {
+      "sad": -2.7,
+      "angry": -3.1,
+      "fearful": -2.9,
+      "disgusted": -3.5
+    }
+  }
+}

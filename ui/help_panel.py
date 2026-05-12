@@ -124,18 +124,128 @@ HELP_CONTENT: List[Tuple[str, str, str]] = [
      <p>All text is lowercased and punctuation is stripped before tokenization.</p>"""),
 
     ("Analysis", "Bundled Dictionaries",
-     """<h2>Bundled Dictionaries (v1.0)</h2>
+     """<h2>Bundled Dictionaries</h2>
      <table>
        <tr><th>Dictionary</th><th>Categories</th><th>Scoring</th><th>License</th></tr>
        <tr><td>AFINN-165</td><td>Sentiment valence (−5 to +5)</td><td>Weighted</td><td>MIT</td></tr>
        <tr><td>VADER Lexicon</td><td>Sentiment (−4 to +4)</td><td>Weighted</td><td>MIT</td></tr>
        <tr><td>Moral Foundations 2.0</td><td>Care, Fairness, Loyalty, Authority, Purity (virtue + vice)</td><td>Binary</td><td>CC-BY</td></tr>
        <tr><td>Brysbaert Concreteness</td><td>Concreteness ratings (1.0–5.0)</td><td>Weighted</td><td>CC-BY</td></tr>
-       <tr><td>WordNet POS</td><td>Noun, Verb, Adjective</td><td>Binary</td><td>Princeton WN License</td></tr>
+       <tr><td>WordNet POS (Full)</td><td>Noun, Verb, Adjective, Adverb (147K lemmas)</td><td>Binary</td><td>Princeton WN License</td></tr>
+       <tr><td>WordNet POS (Curated)</td><td>Noun, Verb, Adjective, Adverb (510 common words)</td><td>Binary</td><td>Princeton WN License</td></tr>
+       <tr><td>Warriner VAD Norms</td><td>Valence, Arousal, Dominance (1–9 scale)</td><td>Weighted</td><td>CC-BY</td></tr>
+       <tr><td>Empath</td><td>194 topic categories (affect, cognition, social, content)</td><td>Binary</td><td>MIT</td></tr>
        <tr><td>NLTK Stopwords</td><td>Function words, Pronouns, Prepositions</td><td>Binary</td><td>Apache 2.0</td></tr>
      </table>
-     <p>You can also import custom dictionaries in JSON format via the
-     <b>+ Import Custom Dictionary…</b> button on the Analyze panel.</p>"""),
+
+     <h3>Optional Download Dictionaries</h3>
+     <p>These dictionaries are not bundled due to licensing. Download them from the original
+     source and import via <b>File → Import Dictionary</b>.</p>
+     <table>
+       <tr><th>Dictionary</th><th>Categories</th><th>License</th><th>Source</th></tr>
+       <tr><td>NRC EmoLex</td><td>8 emotions + positive/negative</td><td>Free for research</td><td>saifmohammad.com</td></tr>
+       <tr><td>HurtLex</td><td>Hurtful language categories</td><td>CC-BY-SA</td><td>github.com/valeriobasile/hurtlex</td></tr>
+       <tr><td>SentiWordNet 3.0</td><td>Positive/negative/objective per synset</td><td>CC-BY-SA</td><td>github.com/aesuli/SentiWordNet</td></tr>
+     </table>
+
+     <p>You can also import your own custom dictionaries. See the
+     <b>Custom Dictionary Format</b> topic below.</p>"""),
+
+    ("Analysis", "Custom Dictionary Format",
+     """<h2>Custom Dictionary Format</h2>
+     <p>TASS accepts custom dictionaries as <b>CSV</b>, <b>Excel (.xlsx)</b>, or <b>JSON</b> files.
+     CSV/Excel is the easiest option for most researchers.</p>
+
+     <h3>CSV / Excel Format (recommended)</h3>
+     <p>Create a spreadsheet with these columns:</p>
+     <table>
+       <tr><th>Column</th><th>Required</th><th>Description</th></tr>
+       <tr><td><code>word</code></td><td>Yes</td><td>The dictionary term</td></tr>
+       <tr><td><code>category</code></td><td>Yes</td><td>Which category the word belongs to</td></tr>
+       <tr><td><code>score</code></td><td>No</td><td>Numeric weight (if omitted, scoring is binary)</td></tr>
+     </table>
+
+     <p><b>Binary example</b> (word membership):</p>
+     <pre style="background-color: #1E293B; color: #E2E8F0; padding: 12px; border-radius: 6px; font-size: 9pt;">
+word,category
+happy,positive
+joyful,positive
+sad,negative
+angry,negative</pre>
+
+     <p><b>Weighted example</b> (numeric scores):</p>
+     <pre style="background-color: #1E293B; color: #E2E8F0; padding: 12px; border-radius: 6px; font-size: 9pt;">
+word,category,score
+happy,positive_affect,3.5
+joyful,positive_affect,4.2
+sad,negative_affect,-2.7
+angry,negative_affect,-3.1</pre>
+
+     <p>Save as .csv or .xlsx and import via the <b>+ Import Custom Dictionary</b> button
+     on the Analyze panel. The file name becomes the dictionary name.</p>
+
+     <hr/>
+
+     <h3>JSON Format (advanced)</h3>
+     <p>For users who prefer structured data files, TASS also accepts JSON.
+     Two scoring types are supported:</p>
+
+     <h3>Binary (word membership)</h3>
+     <p>Each category is a list of words. TASS counts matches and reports the
+     percentage of tokens that match each category.</p>
+     <pre style="background-color: #1E293B; color: #E2E8F0; padding: 12px; border-radius: 6px; font-size: 9pt;">
+{
+  "name": "My Custom Dictionary",
+  "version": "1.0",
+  "description": "What this dictionary measures.",
+  "citation": "Author (Year). Title. Journal.",
+  "license": "CC-BY",
+  "scoring": "binary",
+  "categories": {
+    "category_a": ["word1", "word2", "multi word phrase"],
+    "category_b": ["word3", "word4", "word5"]
+  }
+}</pre>
+
+     <h3>Weighted (numeric scores per word)</h3>
+     <p>Each category is a dictionary mapping words to numeric scores.
+     TASS sums the scores for all matched words in each text entry.</p>
+     <pre style="background-color: #1E293B; color: #E2E8F0; padding: 12px; border-radius: 6px; font-size: 9pt;">
+{
+  "name": "My Weighted Dictionary",
+  "version": "1.0",
+  "description": "A dictionary with numeric scores.",
+  "citation": "Author (Year). Title. Journal.",
+  "license": "CC-BY",
+  "scoring": "weighted",
+  "categories": {
+    "positive": {"happy": 3.5, "joyful": 4.2},
+    "negative": {"sad": -2.7, "angry": -3.1}
+  }
+}</pre>
+
+     <h3>Required fields</h3>
+     <table>
+       <tr><th>Field</th><th>Required</th><th>Description</th></tr>
+       <tr><td><code>name</code></td><td>Yes</td><td>Display name in the Analyze panel</td></tr>
+       <tr><td><code>categories</code></td><td>Yes</td><td>Dict of category names → word lists or word-score dicts</td></tr>
+       <tr><td><code>version</code></td><td>No</td><td>Version string (default: "unknown")</td></tr>
+       <tr><td><code>citation</code></td><td>No</td><td>How to cite this dictionary</td></tr>
+       <tr><td><code>license</code></td><td>No</td><td>License under which the dictionary is shared</td></tr>
+       <tr><td><code>scoring</code></td><td>No</td><td>"binary" (default), "weighted", or "count"</td></tr>
+       <tr><td><code>description</code></td><td>No</td><td>Brief description of the dictionary</td></tr>
+     </table>
+
+     <h3>Tips</h3>
+     <ul>
+       <li>All words are lowercased automatically — you don't need to pre-process.</li>
+       <li>Multi-word phrases (e.g., "climate change") are supported. TASS matches
+       bigrams and trigrams before unigrams, so phrase matches take priority.</li>
+       <li>You can mix binary and weighted categories in the same dictionary —
+       TASS detects the type per category based on whether the data is a list or a dict.</li>
+       <li>Template files are included at <code>dictionaries/templates/</code> in the
+       TASS installation folder.</li>
+     </ul>"""),
 
     ("Group Comparisons", "Running Comparisons",
      """<h2>Group Comparisons</h2>
@@ -316,6 +426,235 @@ HELP_CONTENT: List[Tuple[str, str, str]] = [
        <tr><td>Lab</td><td>$249/yr</td><td>10</td><td>Research labs</td></tr>
        <tr><td>Department</td><td>$699/yr</td><td>50</td><td>Academic departments</td></tr>
      </table>"""),
+
+    # ── Statistical Methods ────────────────────────────────────────
+
+    ("Statistical Methods", "Overview",
+     """<h2>Statistical Methods — Overview</h2>
+     <p>TASS implements standard statistical methods from peer-reviewed literature using
+     established open-source libraries. <b>No custom or proprietary statistical algorithms
+     are used.</b> Every test, effect size, and correction method traces directly to
+     <code>scipy.stats</code>, <code>NumPy</code>, <code>pandas</code>, or <code>NLTK</code>.</p>
+     <p>This transparency is by design: researchers can verify, reproduce, and cite the
+     exact implementations TASS relies on.</p>
+     <h3>Core Libraries</h3>
+     <table>
+       <tr><th>Library</th><th>Version</th><th>Role</th></tr>
+       <tr><td>SciPy</td><td>&ge; 1.11</td><td>Hypothesis tests, effect sizes, confidence intervals, regression</td></tr>
+       <tr><td>NumPy</td><td>&ge; 1.24</td><td>Descriptive statistics, array operations</td></tr>
+       <tr><td>pandas</td><td>&ge; 2.0</td><td>Data handling, correlation matrices</td></tr>
+       <tr><td>NLTK</td><td>&ge; 3.8</td><td>Tokenization, stopwords, lemmatization</td></tr>
+       <tr><td>matplotlib / seaborn</td><td>&ge; 3.7 / &ge; 0.12</td><td>Visualization</td></tr>
+     </table>
+     <h3>Default Parameters</h3>
+     <table>
+       <tr><th>Parameter</th><th>Value</th><th>Rationale</th></tr>
+       <tr><td>Significance threshold (&alpha;)</td><td>0.05</td><td>Standard in social science research</td></tr>
+       <tr><td>Confidence level</td><td>95%</td><td>Corresponds to &alpha; = .05</td></tr>
+       <tr><td>Multiple comparisons</td><td>Bonferroni (default), BH-FDR (optional)</td><td>Family-wise error control</td></tr>
+       <tr><td>Variance assumption</td><td>Welch's (unequal variances)</td><td>More robust default for social science data</td></tr>
+     </table>"""),
+
+    ("Statistical Methods", "Text Scoring",
+     """<h2>Text Scoring Methods</h2>
+     <p>TASS scores text entries by matching tokens against dictionary word lists. Three
+     scoring modes are available:</p>
+     <h3>Binary (Percentage) Scoring</h3>
+     <p><code>score = (matched_tokens / total_tokens) &times; 100</code></p>
+     <p>The proportion of tokens matching a dictionary category, expressed as a percentage.
+     This is the default and most interpretable mode for social science applications.</p>
+     <h3>Count Scoring</h3>
+     <p><code>score = count(matched_tokens)</code></p>
+     <p>Raw count of dictionary matches per entry. Useful when document length normalization
+     is handled externally.</p>
+     <h3>Weighted Scoring</h3>
+     <p><code>score = &sum; weight(token)</code> for all matched tokens</p>
+     <p>Sum of pre-assigned weights from the dictionary (e.g., AFINN sentiment values).
+     Used when dictionaries provide continuous values rather than binary membership.</p>
+     <h3>TF-IDF Scoring</h3>
+     <p><code>score = &sum; TF(t) &times; IDF(t)</code></p>
+     <p>Where:</p>
+     <ul>
+       <li><b>TF(t)</b> = count(t) / n_tokens &mdash; term frequency within the entry</li>
+       <li><b>IDF(t)</b> = ln(N / (1 + DF(t))) &mdash; inverse document frequency with add-one smoothing</li>
+     </ul>
+     <p>IDF weighting down-weights terms that appear in many entries (common words contribute
+     less), following Salton &amp; Buckley (1988). The natural logarithm and add-one smoothing
+     are standard choices.</p>
+     <h3>N-gram Matching</h3>
+     <p>When dictionaries contain multi-word phrases (e.g., "climate change"), TASS generates
+     n-grams up to the maximum phrase length in the dictionary. Unigrams consumed by a matched
+     n-gram are suppressed to prevent double-counting.</p>"""),
+
+    ("Statistical Methods", "Preprocessing",
+     """<h2>Text Preprocessing Pipeline</h2>
+     <p>Text preprocessing is configurable per analysis. Each step is optional:</p>
+     <table>
+       <tr><th>Step</th><th>Default</th><th>Implementation</th></tr>
+       <tr><td>Lowercasing</td><td>On</td><td>Python <code>str.lower()</code></td></tr>
+       <tr><td>Punctuation removal</td><td>On</td><td><code>str.translate()</code> with <code>string.punctuation</code></td></tr>
+       <tr><td>Whitespace normalization</td><td>On</td><td>Regex <code>\\s+</code> &rarr; single space</td></tr>
+       <tr><td>Tokenization</td><td>On</td><td><code>nltk.word_tokenize()</code> (Penn Treebank tokenizer)</td></tr>
+       <tr><td>Stopword removal</td><td>Off</td><td>NLTK English stopword list (179 words)</td></tr>
+       <tr><td>Lemmatization</td><td>Off</td><td><code>nltk.WordNetLemmatizer</code> (WordNet 3.1)</td></tr>
+       <tr><td>Minimum token length</td><td>1</td><td>Tokens shorter than threshold are discarded</td></tr>
+     </table>
+     <p><b>Note:</b> Stopword removal and lemmatization are off by default because many
+     dictionary-based analyses rely on exact word forms. Enable these when your dictionaries
+     use lemmatized forms or when function words should be excluded.</p>"""),
+
+    ("Statistical Methods", "Descriptive Statistics",
+     """<h2>Descriptive Statistics</h2>
+     <p>For each category score, TASS computes:</p>
+     <table>
+       <tr><th>Statistic</th><th>Implementation</th><th>Notes</th></tr>
+       <tr><td>Mean (M)</td><td><code>numpy.mean()</code></td><td>Arithmetic mean</td></tr>
+       <tr><td>Standard deviation (SD)</td><td><code>numpy.std(ddof=1)</code></td><td>Sample SD with Bessel's correction (N&minus;1)</td></tr>
+       <tr><td>Standard error (SE)</td><td><code>scipy.stats.sem()</code></td><td>SE = SD / &radic;N</td></tr>
+       <tr><td>Median</td><td><code>numpy.median()</code></td><td></td></tr>
+       <tr><td>Min / Max</td><td><code>numpy.min()</code>, <code>numpy.max()</code></td><td></td></tr>
+       <tr><td>95% Confidence interval</td><td><code>scipy.stats.t.ppf()</code></td><td>t-distribution with df = N&minus;1. Requires N &ge; 2.</td></tr>
+     </table>"""),
+
+    ("Statistical Methods", "Hypothesis Tests",
+     """<h2>Hypothesis Tests</h2>
+     <h3>Two-Group Comparisons</h3>
+     <table>
+       <tr><th>Test</th><th>Implementation</th><th>When Used</th></tr>
+       <tr><td>Welch's t-test</td><td><code>scipy.stats.ttest_ind(equal_var=False)</code></td><td>Default for 2 groups (does not assume equal variances)</td></tr>
+       <tr><td>Mann-Whitney U</td><td><code>scipy.stats.mannwhitneyu(alternative="two-sided")</code></td><td>Non-parametric option (user-selected)</td></tr>
+     </table>
+     <p>Welch's t-test is the default because it is robust to unequal variances and unequal
+     sample sizes, which are common in social science datasets (Delacre et al., 2017).</p>
+     <h3>Multi-Group Comparisons (3+ groups)</h3>
+     <table>
+       <tr><th>Test</th><th>Implementation</th><th>When Used</th></tr>
+       <tr><td>One-way ANOVA</td><td><code>scipy.stats.f_oneway()</code></td><td>Default for 3+ groups</td></tr>
+       <tr><td>Kruskal-Wallis H</td><td><code>scipy.stats.kruskal()</code></td><td>Non-parametric option (user-selected)</td></tr>
+     </table>
+     <h3>Post-Hoc Pairwise Comparisons</h3>
+     <p>Post-hoc tests run automatically when the omnibus test is significant (p &lt; &alpha;):</p>
+     <table>
+       <tr><th>After...</th><th>Post-Hoc Test</th><th>Implementation</th></tr>
+       <tr><td>Significant ANOVA</td><td>Tukey HSD</td><td><code>scipy.stats.tukey_hsd()</code></td></tr>
+       <tr><td>Significant Kruskal-Wallis</td><td>Dunn's test</td><td>Pairwise Mann-Whitney U with Bonferroni correction</td></tr>
+     </table>
+     <p>If <code>tukey_hsd</code> is unavailable (SciPy &lt; 1.8), TASS falls back to
+     pairwise t-tests with Bonferroni correction.</p>"""),
+
+    ("Statistical Methods", "Assumption Checks",
+     """<h2>Assumption Checks</h2>
+     <p>TASS automatically tests assumptions before running group comparisons:</p>
+     <h3>Normality: Shapiro-Wilk Test</h3>
+     <p><code>scipy.stats.shapiro()</code> &mdash; run per group, per category.</p>
+     <ul>
+       <li>p &ge; .05 &rarr; normality assumed (green)</li>
+       <li>p &lt; .05 &rarr; normality violated (red, with W statistic and p-value shown)</li>
+       <li>Requires N &ge; 3 per group</li>
+     </ul>
+     <h3>Equal Variance: Levene's Test</h3>
+     <p><code>scipy.stats.levene()</code> &mdash; run across all groups, per category.</p>
+     <ul>
+       <li>p &ge; .05 &rarr; equal variances assumed (green)</li>
+       <li>p &lt; .05 &rarr; unequal variances (red, with F statistic and p-value shown)</li>
+       <li>Requires &ge; 2 groups with N &ge; 2 each</li>
+     </ul>
+     <p><b>Note:</b> TASS reports assumption violations but does not automatically switch
+     tests. The user selects parametric or non-parametric tests via the Options panel.
+     This keeps the researcher in control of analytical decisions.</p>"""),
+
+    ("Statistical Methods", "Effect Sizes",
+     """<h2>Effect Sizes</h2>
+     <p>TASS reports an effect size for every hypothesis test:</p>
+     <table>
+       <tr><th>Test</th><th>Effect Size</th><th>Formula</th><th>Interpretation</th></tr>
+       <tr><td>Welch's t-test</td><td>Cohen's d</td><td>d = (M<sub>1</sub> &minus; M<sub>2</sub>) / SD<sub>pooled</sub></td><td>Small: 0.2, Medium: 0.5, Large: 0.8</td></tr>
+       <tr><td>Mann-Whitney U</td><td>Rank-biserial r</td><td>r = 1 &minus; (2U / n<sub>1</sub>n<sub>2</sub>)</td><td>Small: 0.1, Medium: 0.3, Large: 0.5</td></tr>
+       <tr><td>One-way ANOVA</td><td>&eta;&sup2; (eta-squared)</td><td>&eta;&sup2; = SS<sub>between</sub> / SS<sub>total</sub></td><td>Small: .01, Medium: .06, Large: .14</td></tr>
+       <tr><td>Kruskal-Wallis H</td><td>&eta;&sup2;<sub>H</sub></td><td>&eta;&sup2;<sub>H</sub> = (H &minus; k + 1) / (N &minus; k)</td><td>Same benchmarks as &eta;&sup2;</td></tr>
+     </table>
+     <p>The pooled standard deviation for Cohen's d uses the sample variance formula
+     (ddof=1), consistent with Bessel's correction.</p>
+     <p>&eta;&sup2;<sub>H</sub> for Kruskal-Wallis follows the formula from
+     Tomczak &amp; Tomczak (2014), which adjusts for the number of groups (k) and
+     total sample size (N).</p>"""),
+
+    ("Statistical Methods", "Multiple Comparison Corrections",
+     """<h2>Multiple Comparison Corrections</h2>
+     <p>When testing multiple dictionary categories simultaneously, TASS adjusts significance
+     thresholds to control for inflated Type I error:</p>
+     <h3>Bonferroni Correction (Default)</h3>
+     <p><code>&alpha;<sub>adj</sub> = &alpha; / m</code></p>
+     <p>Where m = number of categories tested. Controls the <b>family-wise error rate</b>
+     (FWER). Conservative but reliable.</p>
+     <h3>Benjamini-Hochberg FDR (Optional)</h3>
+     <p>Procedure:</p>
+     <ol>
+       <li>Rank all p-values in ascending order (p<sub>(1)</sub> &le; p<sub>(2)</sub> &le; ... &le; p<sub>(m)</sub>)</li>
+       <li>For each rank i: p<sub>adj</sub> = p<sub>(i)</sub> &times; m / i</li>
+       <li>Enforce monotonicity: p<sub>adj(i)</sub> = min(p<sub>adj(i)</sub>, p<sub>adj(i+1)</sub>)</li>
+       <li>Cap at 1.0</li>
+     </ol>
+     <p>Controls the <b>false discovery rate</b> (FDR). Less conservative than Bonferroni;
+     appropriate when exploring many categories simultaneously (Benjamini &amp; Hochberg, 1995).</p>
+     <h3>Post-Hoc Corrections</h3>
+     <p>Post-hoc pairwise comparisons use Bonferroni correction:
+     <code>p<sub>adj</sub> = min(p &times; n_pairs, 1.0)</code></p>"""),
+
+    ("Statistical Methods", "Correlation Analysis",
+     """<h2>Correlation Analysis</h2>
+     <table>
+       <tr><th>Method</th><th>Implementation</th><th>When to Use</th></tr>
+       <tr><td>Pearson r</td><td><code>scipy.stats.pearsonr()</code></td><td>Linear relationships, interval/ratio data</td></tr>
+       <tr><td>Spearman &rho;</td><td><code>scipy.stats.spearmanr()</code></td><td>Monotonic relationships, ordinal data</td></tr>
+     </table>
+     <p>Correlation matrices are computed via <code>pandas.DataFrame.corr()</code>.
+     Individual p-values for each pair are computed via the SciPy functions above,
+     requiring N &ge; 3 data points.</p>
+     <p>The scatter plot visualization includes an OLS regression line computed via
+     <code>scipy.stats.linregress()</code>, which reports the Pearson r and p-value
+     on the chart.</p>"""),
+
+    ("Statistical Methods", "References",
+     """<h2>References</h2>
+     <p>The following works describe the statistical methods implemented in TASS:</p>
+     <ul>
+       <li>Benjamini, Y., &amp; Hochberg, Y. (1995). Controlling the false discovery rate:
+       A practical and powerful approach to multiple testing. <i>Journal of the Royal Statistical
+       Society: Series B</i>, 57(1), 289&ndash;300.</li>
+       <li>Cohen, J. (1988). <i>Statistical power analysis for the behavioral sciences</i>
+       (2nd ed.). Lawrence Erlbaum.</li>
+       <li>Delacre, M., Lakens, D., &amp; Leys, C. (2017). Why psychologists should by default
+       use Welch's t-test instead of Student's t-test. <i>International Review of Social
+       Psychology</i>, 30(1), 92&ndash;101.</li>
+       <li>Dunn, O. J. (1964). Multiple comparisons using rank sums. <i>Technometrics</i>,
+       6(3), 241&ndash;252.</li>
+       <li>Kruskal, W. H., &amp; Wallis, W. A. (1952). Use of ranks in one-criterion variance
+       analysis. <i>Journal of the American Statistical Association</i>, 47(260), 583&ndash;621.</li>
+       <li>Levene, H. (1960). Robust tests for equality of variances. In I. Olkin (Ed.),
+       <i>Contributions to probability and statistics</i> (pp. 278&ndash;292). Stanford University Press.</li>
+       <li>Salton, G., &amp; Buckley, C. (1988). Term-weighting approaches in automatic text
+       retrieval. <i>Information Processing &amp; Management</i>, 24(5), 513&ndash;523.</li>
+       <li>Shapiro, S. S., &amp; Wilk, M. B. (1965). An analysis of variance test for normality
+       (complete samples). <i>Biometrika</i>, 52(3&ndash;4), 591&ndash;611.</li>
+       <li>Tomczak, M., &amp; Tomczak, E. (2014). The need to report effect size estimates
+       revisited. <i>Trends in Sport Sciences</i>, 21(1), 19&ndash;25.</li>
+       <li>Tukey, J. W. (1949). Comparing individual means in the analysis of variance.
+       <i>Biometrics</i>, 5(2), 99&ndash;114.</li>
+       <li>Welch, B. L. (1947). The generalization of Student's problem when several different
+       population variances are involved. <i>Biometrika</i>, 34(1&ndash;2), 28&ndash;35.</li>
+     </ul>
+     <h3>Software Libraries</h3>
+     <ul>
+       <li>Virtanen, P., et al. (2020). SciPy 1.0: Fundamental algorithms for scientific
+       computing in Python. <i>Nature Methods</i>, 17, 261&ndash;272.</li>
+       <li>Harris, C. R., et al. (2020). Array programming with NumPy. <i>Nature</i>,
+       585, 357&ndash;362.</li>
+       <li>Bird, S., Klein, E., &amp; Loper, E. (2009). <i>Natural language processing with
+       Python</i>. O'Reilly Media.</li>
+       <li>McKinney, W. (2010). Data structures for statistical computing in Python.
+       <i>Proceedings of the 9th Python in Science Conference</i>, 56&ndash;61.</li>
+     </ul>"""),
 
     ("Keyboard Shortcuts", "Shortcuts",
      """<h2>Keyboard Shortcuts</h2>

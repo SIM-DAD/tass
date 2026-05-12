@@ -1,0 +1,9 @@
+word,category,score
+happy,positive_affect,3.5
+joyful,positive_affect,4.2
+content,positive_affect,2.1
+excited,positive_affect,3.8
+sad,negative_affect,-2.7
+angry,negative_affect,-3.1
+fearful,negative_affect,-2.9
+disgusted,negative_affect,-3.5
