@@ -55,10 +55,11 @@ The dominant tool in this space, LIWC, has long served as the default for resear
 - Correlation matrix with Pearson/Spearman toggle
 
 ### Output & Export
-- CSV — full entry-level scores with citation block
+- CSV — clean entry-level scores for R, Excel, pandas, and TASS re-import
 - Excel — multi-sheet workbook (raw scores, summary stats, group comparisons, method documentation, citation)
 - APA-formatted comparison table (plain text, paste into manuscripts)
 - Reproducibility metadata sidecar (JSON) alongside every export
+- Codebook export (JSON/YAML) documenting scored columns, dictionaries, scoring mode, and preprocessing
 - Static visualizations — high-resolution PNG (300 DPI) and SVG
   - Bar charts, word clouds, box plots, violin plots, heatmaps, scatter plots
 - Analysis log export (timestamped decisions for audit trail)
@@ -165,7 +166,7 @@ If you use TASS in your research, please cite it:
 SIM DAD LLC. https://doi.org/[ZENODO_DOI]
 ```
 
-A Zenodo DOI will be minted at the v1.0 release. Every TASS export includes a pre-formatted citation block.
+A Zenodo DOI will be minted at the v1.0 release. TASS exports include citation details in the Excel citation sheet, APA table exports, metadata sidecars, and codebooks.
 
 ---
 
@@ -192,3 +193,13 @@ Full product requirements and technical architecture are documented in this repo
 For support inquiries, bug reports, or licensing questions, use the in-app support button or visit the product website.
 
 Crash reports submitted through TASS are sent to the development team with your explicit consent and are used solely to improve the software.
+
+## Support
+
+If something is broken, missing, or unclear, please open an issue:
+
+- **Bug reports, feature requests, support questions:** [github.com/SIM-DAD/tass/issues/new/choose](https://github.com/SIM-DAD/tass/issues/new/choose)
+- **Prefer email?** Write to `support+tass@simdadllc.com` and a tracking issue opens automatically.
+- **Security disclosures:** `security@simdadllc.com`. Please do not file public issues for security bugs.
+
+A standby triage agent reviews new tickets every 30 minutes. The first human-reviewed response lands within **12 hours**. We're honest about what we'll fix and what we won't, and we tell you which is which.
