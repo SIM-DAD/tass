@@ -8,10 +8,12 @@ from pathlib import Path
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QComboBox,
     QPushButton, QFileDialog, QLineEdit, QFormLayout, QGroupBox,
-    QFrame, QMessageBox,
+    QFrame, QMessageBox, QCheckBox,
 )
 from PySide6.QtGui import QFont, QDesktopServices
 from PySide6.QtCore import QUrl
+
+from services import error_reporter as er
 PALETTES = ["Default (ColorBrewer)", "Colorblind-Safe (viridis)", "Grayscale"]
 
 
@@ -124,6 +126,40 @@ class SettingsDialog(QDialog):
 
         layout.addWidget(dict_group)
 
+        # Privacy group — crash-reporting preferences (policy section 6).
+        privacy_group = QGroupBox("Privacy")
+        privacy_layout = QVBoxLayout(privacy_group)
+
+        privacy_note = QLabel(
+            "TASS never sends any data automatically. If TASS crashes, you can "
+            "choose to send a crash report through your own email client. "
+            "Reports contain only the technical error, your TASS version, and "
+            "your operating system and hardware specs."
+        )
+        privacy_note.setWordWrap(True)
+        privacy_note.setFont(QFont("Segoe UI", 9))
+        privacy_note.setStyleSheet("color: #666666; margin-bottom: 8px;")
+        privacy_layout.addWidget(privacy_note)
+
+        self._prompt_cb = QCheckBox("Prompt me to send a crash report when TASS crashes")
+        self._queue_cb = QCheckBox("Save a report for later review if I don't send it")
+        self._remind_cb = QCheckBox("Remind me about saved reports on the next launch")
+        privacy_layout.addWidget(self._prompt_cb)
+        privacy_layout.addWidget(self._queue_cb)
+        privacy_layout.addWidget(self._remind_cb)
+
+        queued_btn = QPushButton("View queued reports…")
+        queued_btn.setFixedWidth(170)
+        queued_btn.setStyleSheet(
+            "QPushButton { background-color: #F5F5F5; color: #333333; "
+            "border: 1px solid #CCCCCC; border-radius: 4px; padding: 5px 8px; }"
+            "QPushButton:hover { background-color: #EEEEEE; }"
+        )
+        queued_btn.clicked.connect(self._open_queued_reports)
+        privacy_layout.addWidget(queued_btn)
+
+        layout.addWidget(privacy_group)
+
         layout.addStretch()
 
         # Buttons
@@ -154,6 +190,20 @@ class SettingsDialog(QDialog):
         export_path = self._settings.get("export.default_path", "")
         self._export_path_edit.setText(export_path)
 
+        self._prompt_cb.setChecked(
+            self._settings.get(er.KEY_PROMPT_ON_CRASH, er.DEFAULT_PROMPT_ON_CRASH)
+        )
+        self._queue_cb.setChecked(
+            self._settings.get(er.KEY_QUEUE_ON_CRASH, er.DEFAULT_QUEUE_ON_CRASH)
+        )
+        self._remind_cb.setChecked(
+            self._settings.get(er.KEY_REMIND_POST_RESTART, er.DEFAULT_REMIND_POST_RESTART)
+        )
+
+    def _open_queued_reports(self):
+        from ui.crash_dialogs import QueuedReportsDialog
+        QueuedReportsDialog(self).exec()
+
     def _browse_export_path(self):
         path = QFileDialog.getExistingDirectory(self, "Select Default Export Folder")
         if path:
@@ -165,6 +215,10 @@ class SettingsDialog(QDialog):
     def _save_and_close(self):
         self._settings.set("viz.palette", self._palette_combo.currentText())
         self._settings.set("export.default_path", self._export_path_edit.text())
+
+        self._settings.set(er.KEY_PROMPT_ON_CRASH, self._prompt_cb.isChecked())
+        self._settings.set(er.KEY_QUEUE_ON_CRASH, self._queue_cb.isChecked())
+        self._settings.set(er.KEY_REMIND_POST_RESTART, self._remind_cb.isChecked())
 
         from core.session import Session
         Session.instance().ui_state["color_palette"] = self._palette_combo.currentText()

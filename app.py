@@ -107,6 +107,17 @@ class TASSApp(QApplication):
             dlg = LicenseDialog(mode="trial_signup", parent=self.main_window)
             dlg.exec()
 
+        # Crash-reporting touchpoints (policy section 3): the first-launch
+        # opt-in preference (A, shown once) and the post-crash review of any
+        # queued reports (C). Both run after the license gate and before the
+        # main window opens. Never fatal.
+        try:
+            from ui.crash_dialogs import FirstLaunchPrefDialog, PostRestartDialog
+            FirstLaunchPrefDialog.maybe_show(self.main_window)
+            PostRestartDialog.maybe_show(self.main_window)
+        except Exception:
+            pass
+
         self.main_window.show()
 
     # ------------------------------------------------------------------
@@ -120,27 +131,32 @@ class TASSApp(QApplication):
 
         tb_str = "".join(traceback.format_exception(exc_type, exc_value, exc_tb))
 
-        # Show user-facing dialog
-        msg = QMessageBox()
-        msg.setIcon(QMessageBox.Critical)
-        msg.setWindowTitle("TASS — Unexpected Error")
-        msg.setText("An unexpected error occurred.")
-        msg.setInformativeText(
-            "Would you like to send a crash report to help improve TASS?\n\n"
-            "No personal data or text content is ever included."
-        )
-        msg.setDetailedText(tb_str)
-        msg.setStandardButtons(
-            QMessageBox.Yes | QMessageBox.No
-        )
-        msg.button(QMessageBox.Yes).setText("Send Report")
-        msg.button(QMessageBox.No).setText("Don't Send")
+        # Manual-submit crash flow per the SIM DAD LLC error-reporting policy:
+        # build a redacted, schema-fixed report, let the user review it in full,
+        # and only ever send it via their own mail client on an explicit click.
+        # If the user closes the dialog without choosing, the report is queued
+        # locally for review on next launch (touchpoint C). Nothing is ever
+        # transmitted automatically.
+        try:
+            from services import error_reporter as er
+            from services.settings_manager import SettingsManager
+            from ui.crash_dialogs import LiveCrashDialog, ACTION_CLOSED
 
-        result = msg.exec()
+            report = er.build_report(tb_str)
+            settings = SettingsManager.instance()
+            opted_in = settings.get(er.KEY_PROMPT_ON_CRASH, er.DEFAULT_PROMPT_ON_CRASH)
 
-        if result == QMessageBox.Yes:
+            dlg = LiveCrashDialog(report, opted_in=opted_in, parent=getattr(self, "main_window", None))
+            dlg.exec()
+
+            queue_on = settings.get(er.KEY_QUEUE_ON_CRASH, er.DEFAULT_QUEUE_ON_CRASH)
+            if dlg.action == ACTION_CLOSED and queue_on:
+                er.queue_report(report)
+        except Exception:
+            # The reporting subsystem must never raise from inside excepthook.
+            # Best-effort: queue the redacted report locally so it is not lost.
             try:
-                from services.error_reporter import ErrorReporter
-                ErrorReporter().send(tb_str)
+                from services import error_reporter as er
+                er.queue_report(er.build_report(tb_str))
             except Exception:
                 pass
